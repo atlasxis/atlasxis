@@ -1,0 +1,51 @@
+# Workflow oficial: roda o CI completo do ORÁCULO no próprio repo (8 gates)
+# e demonstra o uso da action de scan em PRs.
+#
+# Política documentada (docs/CLI-SPEC.md):
+#   - VULNERABLE comprovado  → falha o job (exit 2)
+#   - INSUFFICIENT/UNVERIFIED → reportado, NÃO falha (nunca tratado como SAFE)
+#   - NOT_ANALYZED            → reportado, NÃO falha (nunca tratado como SAFE)
+name: oracle
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  ci-gates:
+    name: CI público do engine (gates reprodutíveis)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install
+      # --public: roda só os gates reprodutíveis (sem o baseline congelado
+      # nem corpora privados, que não existem no runner). O gate diferencial
+      # aparece como SKIPPED, nunca como falso-verde.
+      - run: npm run ci:public
+
+  scan-self:
+    name: Scan de demonstração (action)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install
+      - name: ORÁCULO scan (fixture de demonstração)
+        uses: ./.github/actions/oracle-scan
+        with:
+          path: public-corpus/post-read-gate
+        # public-corpus/post-read-gate é um fixture CONTROLLED sintético; um
+        # projeto com VULNERABLE comprovado falharia aqui com exit 2, por política.
+      - name: Publicar proof report como artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oracle-proof-report
+          path: |
+            oracle-report.json
+            oracle-proof-report.md

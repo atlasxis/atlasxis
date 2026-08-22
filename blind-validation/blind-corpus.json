@@ -1,0 +1,446 @@
+[
+ {
+  "case_id": "B0415-admin-only",
+  "category": "admin-only",
+  "files": {
+   "route.ts": "export async function POST(request,{params}){ try {\nconst {id}=await params; const {user}=await auth(request); const {data:p}=await supabaseAdmin.from(\"profiles\").select(\"role\").eq(\"id\",user.id).single(); if(!p||p.role!==\"admin\") return Response.json({},{status:403}); await supabaseAdmin.from(\"orders\").update({s:1}).eq(\"id\",id); return Response.json({ok:true});\n} catch(e){ return jsonError(e); } }"
+  },
+  "entry": "route.ts",
+  "sql": null,
+  "context": "Handler de API Next.js + Supabase. Pergunta: existe evidência suficiente no material para PROVAR autorização para cada sink deste handler?"
+ },
+ {
+  "case_id": "B0416-admin-only",
+  "category": "admin-only",
+  "files": {
+   "route.ts": "export async function POST(request,{params}){ try {\nconst {id}=await params; const {user}=await auth(request); const {data:p}=await supabaseAdmin.from(\"profiles\").select(\"role\").eq(\"id\",user.id).single(); if(!p||p.role!==\"admin\") return Response.json({},{status:403}); await supabaseAdmin.from(\"items\").update({s:1}).eq(\"id\",id); return Response.json({ok:true});\n} catch(e){ return jsonError(e); } }"
+  },
+  "entry": "route.ts",
+  "sql": null,
+  "context": "Handler de API Next.js + Supabase. Pergunta: existe evidência suficiente no material para PROVAR autorização para cada sink deste handler?"
+ },
+ {
+  "case_id": "B0125-admin-owner",
+  "category": "admin-owner",
+  "files": {
+   "route.ts": "export async function POST(request,{params}){ try {\nconst {id}=await params; const {user}=await auth(request); const {data:prof}=await supabaseAdmin.from(\"profiles\").select(\"role\").eq(\"id\",user.id).single(); const {data:r}=await supabaseAdmin.from(\"orders\").select(\"id,owner_id\").eq(\"id\",id).maybeSingle(); if(prof?.role!==\"admin\" && r.owner_id!==user.id) throw new Error(\"403\"); await supabaseAdmin.from(\"orders\").delete().eq(\"id\",id); return Response.json({ok:true});\n} catch(e){ return jsonError(e); } }"
+  },
+  "entry": "route.ts",
+  "sql": null,
+  "context": "Handler de API Next.js + Supabase. Pergunta: existe evidência suficiente no material para PROVAR autorização para cada sink deste handler?"
+ },
+ {
+  "case_id": "B0126-admin-owner",
+  "category": "admin-owner",
+  "files": {
+   "route.ts": "export async function POST(request,{params}){ try {\nconst {id}=await params; const {user}=await auth(request); const {data:prof}=await supabaseAdmin.from(\"profiles\").select(\"role\").eq(\"id\",user.id).single(); const {data:r}=await supabaseAdmin.from(\"items\").select(\"id,created_by\").eq(\"id\",id).maybeSingle(); if(prof?.role!==\"admin\" && r.created_by!==user.id) throw new Error(\"403\"); await supabaseAdmin.from(\"items\").delete().eq(\"id\",id); return Response.json({ok:true});\n} catch(e){ return jsonError(e); } }"
+  },
+  "entry": "route.ts",
+  "sql": null,
+  "context": "Handler de API Next.js + Supabase. Pergunta: existe evidência suficiente no material para PROVAR autorização para cada sink deste handler?"
+ },
+ {
+  "case_id": "B0487-adversarial-nameonly",
+  "category": "adversarial-nameonly",
+  "files": {
+   "route.ts": "export async function GET(request,{params}){ try {\nconst {id}=await params; const {user}=await auth(request); const authorized=\"owner check\"; const isAdmin=\"admin\";\n const {data}=await supabaseAdmin.from(\"records\").select(\"*\").eq(\"conversation_id\",id); return Response.json({data});\n} catch(e){ return jsonError(e); } }"
+  },
+  "entry": "route.ts",
+  "sql": null,
+  "context": "Handler de API Next.js + Supabase. Pergunta: existe evidência suficiente no material para PROVAR autorização para cada sink deste handler?"
+ },
+ {
+  "case_id": "B0488-adversarial-nameonly",
+  "category": "adversarial-nameonly",
+  "files": {
+   "route.ts": "export async function GET(request,{params}){ try {\nconst {id}=await params; const {user}=await auth(request); const authorized=\"owner check\"; const isAdmin=\"admin\";\n const {data}=await supabaseAdmin.from(\"entries\").select(\"*\").eq(\"thread_id\",id); return Response.json({data});\n} catch(e){ return jsonError(e); } }"
+  },
+  "entry": "route.ts",
+  "sql": null,
+  "context": "Handler de API Next.js + Supabase. Pergunta: existe evidência suficiente no material para PROVAR autorização para cada sink deste handler?"
+ },
+ {
+  "case_id": "B0227-authed-no-rls",
+  "category": "authed-no-rls",
+  "files": {
+   "route.ts": "export async function GET(request,{params}){ try {\nconst {id}=await params; const {user}=await supabaseAuth(request); const {data}=await supabaseAuthed.from(\"entries\").select(\"*\").eq(\"id\",id); return Response.json({data});\n} catch(e){ return jsonError(e); } }"
+  },
+  "entry": "route.ts",
+  "sql": null,
+  "context": "Handler de API Next.js + Supabase. Pergunta: existe evidência suficiente no material para PROVAR autorização para cada sink deste handler?"
+ },
+ {
+  "case_id": "B0228-authed-no-rls",
+  "category": "authed-no-rls",
+  "files": {
+   "route.ts": "export async function GET(request,{params}){ try {\nconst {id}=await params; const {user}=await supabaseAuth(request); const {data}=await supabaseAuthed.from(\"orders\").select(\"*\").eq(\"id\",id); return Response.json({data});\n} catch(e){ return jsonError(e); } }"
+  },
+  "entry": "route.ts",
+  "sql": null,
+  "context": "Handler de API Next.js + Supabase. Pergunta: existe evidência suficiente no material para PROVAR autorização para cada sink deste handler?"
+ },
+ {
+  "case_id": "B0439-cross-file-helper",
+  "category": "cross-file-helper",
+  "files": {
+   "route.ts": "import {ensureOwns} from \"@/lib/g\"; export async function DELETE(request,{params}){ const {id}=await params; const {user}=await auth(request); await ensureOwns(supabaseAdmin,user.id,id); await supabaseAdmin.from(\"records\").delete().eq(\"id\",id); return Response.json({ok:true}); }",
+   "lib/g.ts": "export async function ensureOwns(admin,uid,rid){ const {data}=await admin.from(\"records\").select(\"id,author_id\").eq(\"id\",rid).maybeSingle(); if(!data) throw new Error(\"404\"); if(data.author_id!==uid) throw new Error(\"403\"); return data; }"
+  },
+  "entry": "route.ts",
+  "sql": null,
+  "context": "Handler de API Next.js + Supabase. Pergunta: existe evidência suficiente no material para PROVAR autorização para cada sink deste handler?"
+ },
+ {
+  "case_id": "B0440-cross-file-helper",
+  "category": "cross-file-helper",
+  "files": {
+   "route.ts": "import {ensureOwns} from \"@/lib/g\"; export async function DELETE(request,{params}){ const {id}=await params; const {user}=await auth(request); await ensureOwns(supabaseAdmin,user.id,id); await supabaseAdmin.from(\"items\").delete().eq(\"id\",id); return Response.json({ok:true}); }",
+   "lib/g.ts": "export async function ensureOwns(admin,uid,rid){ const {data}=await admin.from(\"items\").select(\"id,owner_id\").eq(\"id\",rid).maybeSingle(); if(!data) throw new Error(\"404\"); if(data.owner_id!==uid) throw new Error(\"403\"); return data; }"
+  },
+  "entry": "route.ts",
+  "sql": null,
+  "context": "Handler de API Next.js + Supabase. Pergunta: existe evidência suficiente no material para PROVAR autorização para cada sink deste handler?"
+ },
+ {
+  "case_id": "B0375-dead-guard",
+  "category": "dead-guard",
+  "files": {
+   "route.ts": "export async function GET(request,{params}){ try {\nconst {id}=await params; const {user}=await auth(request); if(false){ const {data:r}=await supabaseAdmin.from(\"records\").select(\"owner_id\").eq(\"id\",id); if(r.owner_id!==user.id) throw new Error(\"403\"); } const {data}=await supabaseAdmin.from(\"records\").select(\"*\").eq(\"thread_id\",id); return Response.json({data});\n} catch(e){ return jsonError(e); } }"
+  },
+  "entry": "route.ts",
+  "sql": null,
+  "context": "Handler de API Next.js + Supabase. Pergunta: existe evidência suficiente no material para PROVAR autorização para cada sink deste handler?"
+ },
+ {
+  "case_id": "B0376-dead-guard",
+  "category": "dead-guard",
+  "files": {
+   "route.ts": "export async function GET(request,{params}){ try {\nconst {id}=await params; const {user}=await auth(request); if(false){ const {data:r}=await supabaseAdmin.from(\"records\").select(\"user_id\").eq(\"id\",id); if(r.user_id!==user.id) throw new Error(\"403\"); } const {data}=await supabaseAdmin.from(\"records\").select(\"*\").eq(\"thread_id\",id); return Response.json({data});\n} catch(e){ return jsonError(e); } }"
+  },
+  "entry": "route.ts",
+  "sql": null,
+  "context": "Handler de API Next.js + Supabase. Pergunta: existe evidência suficiente no material para PROVAR autorização para cada sink deste handler?"
+ },
+ {
+  "case_id": "B0517-fake-admin-name",
+  "category": "fake-admin-name",
+  "files": {
+   "route.ts": "import {isAdmin} from \"@/lib/fake\"; export async function POST(request,{params}){ const {id}=await params; const {user}=await auth(request); if(!isAdmin(user)) return Response.json({},{status:403}); await supabaseAdmin.from(\"notes\").update({s:1}).eq(\"id\",id); return Response.json({ok:true}); }",
+   "lib/fake.ts": "export function isAdmin(u){ return true; }"
+  },
+  "entry": "route.ts",
+  "sql": null,
+  "context": "Handler de API Next.js + Supabase. Pergunta: existe evidência suficiente no material para PROVAR autorização para cada sink deste handler?"
+ },
+ {
+  "case_id": "B0518-fake-admin-name",
+  "category": "fake-admin-name",
+  "files": {
+   "route.ts": "import {isAdmin} from \"@/lib/fake\"; export async function POST(request,{params}){ const {id}=await params; const {user}=await auth(request); if(!isAdmin(user)) return Response.json({},{status:403}); await supabaseAdmin.from(\"orders\").update({s:1}).eq(\"id\",id); return Response.json({ok:true}); }",
+   "lib/fake.ts": "export function isAdmin(u){ return true; }"
+  },
+  "entry": "route.ts",
+  "sql": null,
+  "context": "Handler de API Next.js + Supabase. Pergunta: existe evidência suficiente no material para PROVAR autorização para cada sink deste handler?"
+ },
+ {
+  "case_id": "B0165-idor-service-role",
+  "category": "idor-service-role",
+  "files": {
+   "route.ts": "export async function GET(request,{params}){ try {\nconst {id}=await params; const {user}=await auth(request); const {data}=await supabaseAdmin.from(\"orders\").select(\"*\").eq(\"post_id\",id); return Response.json({data});\n} catch(e){ return jsonError(e); } }"
+  },
+  "entry": "route.ts",
+  "sql": null,
+  "context": "Handler de API Next.js + Supabase. Pergunta: existe evidência suficiente no material para PROVAR autorização para cada sink deste handler?"
+ },
+ {
+  "case_id": "B0166-idor-service-role",
+  "category": "idor-service-role",
+  "files": {
+   "route.ts": "export async function POST(request,{params}){ try {\nconst {id}=await params; const {user}=await auth(request); await supabaseAdmin.from(\"records\").delete().eq(\"id\",id); return Response.json({ok:true});\n} catch(e){ return jsonError(e); } }"
+  },
+  "entry": "route.ts",
+  "sql": null,
+  "context": "Handler de API Next.js + Supabase. Pergunta: existe evidência suficiente no material para PROVAR autorização para cada sink deste handler?"
+ },
+ {
+  "case_id": "B0335-multi-sink-allsafe",
+  "category": "multi-sink-allsafe",
+  "files": {
+   "route.ts": "export async function POST(request,{params}){ try {\nconst {id}=await params; const {user}=await auth(request); const {data:r}=await supabaseAdmin.from(\"docs\").select(\"id,user_id\").eq(\"id\",id).maybeSingle(); if(r.user_id!==user.id) throw new Error(\"403\"); await supabaseAdmin.from(\"docs\").update({s:1}).eq(\"id\",id); await supabaseAdmin.from(\"docs\").delete().eq(\"id\",id); return Response.json({ok:true});\n} catch(e){ return jsonError(e); } }"
+  },
+  "entry": "route.ts",
+  "sql": null,
+  "context": "Handler de API Next.js + Supabase. Pergunta: existe evidência suficiente no material para PROVAR autorização para cada sink deste handler?"
+ },
+ {
+  "case_id": "B0336-multi-sink-allsafe",
+  "category": "multi-sink-allsafe",
+  "files": {
+   "route.ts": "export async function POST(request,{params}){ try {\nconst {id}=await params; const {user}=await auth(request); const {data:r}=await supabaseAdmin.from(\"items\").select(\"id,author_id\").eq(\"id\",id).maybeSingle(); if(r.author_id!==user.id) throw new Error(\"403\"); await supabaseAdmin.from(\"items\").update({s:1}).eq(\"id\",id); await supabaseAdmin.from(\"items\").delete().eq(\"id\",id); return Response.json({ok:true});\n} catch(e){ return jsonError(e); } }"
+  },
+  "entry": "route.ts",
+  "sql": null,
+  "context": "Handler de API Next.js + Supabase. Pergunta: existe evidência suficiente no material para PROVAR autorização para cada sink deste handler?"
+ },
+ {
+  "case_id": "B0337-multi-sink-mixed",
+  "category": "multi-sink-mixed",
+  "files": {
+   "route.ts": "export async function POST(request,{params}){ try {\nconst {id,otherId}=await params; const {user}=await auth(request); const {data:r}=await supabaseAdmin.from(\"notes\").select(\"id,user_id\").eq(\"id\",id).maybeSingle(); if(r.user_id!==user.id) throw new Error(\"403\"); await supabaseAdmin.from(\"notes\").update({s:1}).eq(\"id\",id); await supabaseAdmin.from(\"notes\").delete().eq(\"id\",otherId); return Response.json({ok:true});\n} catch(e){ return jsonError(e); } }"
+  },
+  "entry": "route.ts",
+  "sql": null,
+  "context": "Handler de API Next.js + Supabase. Pergunta: existe evidência suficiente no material para PROVAR autorização para cada sink deste handler?"
+ },
+ {
+  "case_id": "B0338-multi-sink-mixed",
+  "category": "multi-sink-mixed",
+  "files": {
+   "route.ts": "export async function POST(request,{params}){ try {\nconst {id,otherId}=await params; const {user}=await auth(request); const {data:r}=await supabaseAdmin.from(\"entries\").select(\"id,created_by\").eq(\"id\",id).maybeSingle(); if(r.created_by!==user.id) throw new Error(\"403\"); await supabaseAdmin.from(\"entries\").update({s:1}).eq(\"id\",id); await supabaseAdmin.from(\"entries\").delete().eq(\"id\",otherId); return Response.json({ok:true});\n} catch(e){ return jsonError(e); } }"
+  },
+  "entry": "route.ts",
+  "sql": null,
+  "context": "Handler de API Next.js + Supabase. Pergunta: existe evidência suficiente no material para PROVAR autorização para cada sink deste handler?"
+ },
+ {
+  "case_id": "B0065-post-read",
+  "category": "post-read",
+  "files": {
+   "route.ts": "export async function POST(request,{params}){ try {\nconst {id}=await params; const {user}=await auth(request); const {data:r}=await supabaseAdmin.from(\"items\").select(\"id,user_id\").eq(\"id\",id).maybeSingle(); if(r.user_id!==user.id) throw new Error(\"403\"); await supabaseAdmin.from(\"items\").update({s:1}).eq(\"id\",id); return Response.json({ok:true});\n} catch(e){ return jsonError(e); } }"
+  },
+  "entry": "route.ts",
+  "sql": null,
+  "context": "Handler de API Next.js + Supabase. Pergunta: existe evidência suficiente no material para PROVAR autorização para cada sink deste handler?"
+ },
+ {
+  "case_id": "B0067-post-read",
+  "category": "post-read",
+  "files": {
+   "route.ts": "export async function POST(request,{params}){ try {\nconst {id}=await params; const {user}=await auth(request); const {data:r}=await supabaseAdmin.from(\"records\").select(\"id,author_id\").eq(\"id\",id).maybeSingle(); if(r.author_id!==user.id) throw new Error(\"403\"); await supabaseAdmin.from(\"records\").delete().eq(\"id\",id); return Response.json({ok:true});\n} catch(e){ return jsonError(e); } }"
+  },
+  "entry": "route.ts",
+  "sql": null,
+  "context": "Handler de API Next.js + Supabase. Pergunta: existe evidência suficiente no material para PROVAR autorização para cada sink deste handler?"
+ },
+ {
+  "case_id": "B0063-post-read-nearmiss",
+  "category": "post-read-nearmiss",
+  "files": {
+   "route.ts": "export async function POST(request,{params}){ try {\nconst {id,otherId}=await params; const {user}=await auth(request); const {data:r}=await supabaseAdmin.from(\"orders\").select(\"id,author_id\").eq(\"id\",id).maybeSingle(); if(r.author_id!==user.id) throw new Error(\"403\"); await supabaseAdmin.from(\"orders\").update({s:1}).eq(\"id\",otherId); return Response.json({ok:true});\n} catch(e){ return jsonError(e); } }"
+  },
+  "entry": "route.ts",
+  "sql": null,
+  "context": "Handler de API Next.js + Supabase. Pergunta: existe evidência suficiente no material para PROVAR autorização para cada sink deste handler?"
+ },
+ {
+  "case_id": "B0064-post-read-nearmiss",
+  "category": "post-read-nearmiss",
+  "files": {
+   "route.ts": "export async function POST(request,{params}){ try {\nconst {id,otherId}=await params; const {user}=await auth(request); const {data:r}=await supabaseAdmin.from(\"items\").select(\"id,created_by\").eq(\"id\",id).maybeSingle(); if(r.created_by!==user.id) throw new Error(\"403\"); await supabaseAdmin.from(\"items\").update({s:1}).eq(\"id\",otherId); return Response.json({ok:true});\n} catch(e){ return jsonError(e); } }"
+  },
+  "entry": "route.ts",
+  "sql": null,
+  "context": "Handler de API Next.js + Supabase. Pergunta: existe evidência suficiente no material para PROVAR autorização para cada sink deste handler?"
+ },
+ {
+  "case_id": "B0279-rls-admin-or-owner",
+  "category": "rls-admin-or-owner",
+  "files": {
+   "route.ts": "export async function GET(request,{params}){ try {\nconst {id}=await params; const {user}=await supabaseAuth(request); const {data}=await supabaseAuthed.from(\"notes\").select(\"*\").eq(\"id\",id); return Response.json({data});\n} catch(e){ return jsonError(e); } }"
+  },
+  "entry": "route.ts",
+  "sql": {
+   "schema.sql": "create table public.notes ( id uuid primary key, created_by uuid );alter table public.notes enable row level security;create or replace function public.is_admin() returns boolean language sql as $$ select exists (select 1 from public.profiles where id=auth.uid() and role='admin'); $$; create policy p on public.notes for select using (created_by=auth.uid() or public.is_admin());"
+  },
+  "context": "Handler de API Next.js + Supabase. Pergunta: existe evidência suficiente no material para PROVAR autorização para cada sink deste handler?"
+ },
+ {
+  "case_id": "B0298-rls-admin-or-owner",
+  "category": "rls-admin-or-owner",
+  "files": {
+   "route.ts": "export async function GET(request,{params}){ try {\nconst {id}=await params; const {user}=await supabaseAuth(request); const {data}=await supabaseAuthed.from(\"items\").select(\"*\").eq(\"id\",id); return Response.json({data});\n} catch(e){ return jsonError(e); } }"
+  },
+  "entry": "route.ts",
+  "sql": {
+   "schema.sql": "create table public.items ( id uuid primary key, user_id uuid );alter table public.items enable row level security;create or replace function public.is_admin() returns boolean language sql as $$ select exists (select 1 from public.profiles where id=auth.uid() and role='admin'); $$; create policy p on public.items for select using (user_id=auth.uid() or public.is_admin());"
+  },
+  "context": "Handler de API Next.js + Supabase. Pergunta: existe evidência suficiente no material para PROVAR autorização para cada sink deste handler?"
+ },
+ {
+  "case_id": "B0276-rls-none",
+  "category": "rls-none",
+  "files": {
+   "route.ts": "export async function GET(request,{params}){ try {\nconst {id}=await params; const {user}=await supabaseAuth(request); const {data}=await supabaseAuthed.from(\"items\").select(\"*\").eq(\"id\",id); return Response.json({data});\n} catch(e){ return jsonError(e); } }"
+  },
+  "entry": "route.ts",
+  "sql": {
+   "schema.sql": "create table public.items ( id uuid primary key, owner_id uuid );"
+  },
+  "context": "Handler de API Next.js + Supabase. Pergunta: existe evidência suficiente no material para PROVAR autorização para cada sink deste handler?"
+ },
+ {
+  "case_id": "B0278-rls-none",
+  "category": "rls-none",
+  "files": {
+   "route.ts": "export async function GET(request,{params}){ try {\nconst {id}=await params; const {user}=await supabaseAuth(request); const {data}=await supabaseAuthed.from(\"entries\").select(\"*\").eq(\"id\",id); return Response.json({data});\n} catch(e){ return jsonError(e); } }"
+  },
+  "entry": "route.ts",
+  "sql": {
+   "schema.sql": "create table public.entries ( id uuid primary key, created_by uuid );"
+  },
+  "context": "Handler de API Next.js + Supabase. Pergunta: existe evidência suficiente no material para PROVAR autorização para cada sink deste handler?"
+ },
+ {
+  "case_id": "B0274-rls-open",
+  "category": "rls-open",
+  "files": {
+   "route.ts": "export async function GET(request,{params}){ try {\nconst {id}=await params; const {user}=await supabaseAuth(request); const {data}=await supabaseAuthed.from(\"records\").select(\"*\").eq(\"id\",id); return Response.json({data});\n} catch(e){ return jsonError(e); } }"
+  },
+  "entry": "route.ts",
+  "sql": {
+   "schema.sql": "create table public.records ( id uuid primary key, owner_id uuid );alter table public.records enable row level security;create policy p on public.records for select using (true);"
+  },
+  "context": "Handler de API Next.js + Supabase. Pergunta: existe evidência suficiente no material para PROVAR autorização para cada sink deste handler?"
+ },
+ {
+  "case_id": "B0292-rls-open",
+  "category": "rls-open",
+  "files": {
+   "route.ts": "export async function GET(request,{params}){ try {\nconst {id}=await params; const {user}=await supabaseAuth(request); const {data}=await supabaseAuthed.from(\"docs\").select(\"*\").eq(\"id\",id); return Response.json({data});\n} catch(e){ return jsonError(e); } }"
+  },
+  "entry": "route.ts",
+  "sql": {
+   "schema.sql": "create table public.docs ( id uuid primary key, created_by uuid );alter table public.docs enable row level security;create policy p on public.docs for select using (true);"
+  },
+  "context": "Handler de API Next.js + Supabase. Pergunta: existe evidência suficiente no material para PROVAR autorização para cada sink deste handler?"
+ },
+ {
+  "case_id": "B0273-rls-owner",
+  "category": "rls-owner",
+  "files": {
+   "route.ts": "export async function GET(request,{params}){ try {\nconst {id}=await params; const {user}=await supabaseAuth(request); const {data}=await supabaseAuthed.from(\"records\").select(\"*\").eq(\"id\",id); return Response.json({data});\n} catch(e){ return jsonError(e); } }"
+  },
+  "entry": "route.ts",
+  "sql": {
+   "schema.sql": "create table public.records ( id uuid primary key, user_id uuid );alter table public.records enable row level security;create policy p on public.records for select using (auth.uid() = user_id);"
+  },
+  "context": "Handler de API Next.js + Supabase. Pergunta: existe evidência suficiente no material para PROVAR autorização para cada sink deste handler?"
+ },
+ {
+  "case_id": "B0275-rls-owner",
+  "category": "rls-owner",
+  "files": {
+   "route.ts": "export async function GET(request,{params}){ try {\nconst {id}=await params; const {user}=await supabaseAuth(request); const {data}=await supabaseAuthed.from(\"notes\").select(\"*\").eq(\"id\",id); return Response.json({data});\n} catch(e){ return jsonError(e); } }"
+  },
+  "entry": "route.ts",
+  "sql": {
+   "schema.sql": "create table public.notes ( id uuid primary key, author_id uuid );alter table public.notes enable row level security;create policy p on public.notes for select using (auth.uid() = author_id);"
+  },
+  "context": "Handler de API Next.js + Supabase. Pergunta: existe evidência suficiente no material para PROVAR autorização para cada sink deste handler?"
+ },
+ {
+  "case_id": "B0282-rls-restrictive",
+  "category": "rls-restrictive",
+  "files": {
+   "route.ts": "export async function GET(request,{params}){ try {\nconst {id}=await params; const {user}=await supabaseAuth(request); const {data}=await supabaseAuthed.from(\"notes\").select(\"*\").eq(\"id\",id); return Response.json({data});\n} catch(e){ return jsonError(e); } }"
+  },
+  "entry": "route.ts",
+  "sql": {
+   "schema.sql": "create table public.notes ( id uuid primary key, owner_id uuid );alter table public.notes enable row level security;create policy o on public.notes for select using (true); create policy r on public.notes as restrictive for select using (auth.uid()=owner_id);"
+  },
+  "context": "Handler de API Next.js + Supabase. Pergunta: existe evidência suficiente no material para PROVAR autorização para cada sink deste handler?"
+ },
+ {
+  "case_id": "B0283-rls-restrictive",
+  "category": "rls-restrictive",
+  "files": {
+   "route.ts": "export async function GET(request,{params}){ try {\nconst {id}=await params; const {user}=await supabaseAuth(request); const {data}=await supabaseAuthed.from(\"tickets\").select(\"*\").eq(\"id\",id); return Response.json({data});\n} catch(e){ return jsonError(e); } }"
+  },
+  "entry": "route.ts",
+  "sql": {
+   "schema.sql": "create table public.tickets ( id uuid primary key, created_by uuid );alter table public.tickets enable row level security;create policy o on public.tickets for select using (true); create policy r on public.tickets as restrictive for select using (auth.uid()=created_by);"
+  },
+  "context": "Handler de API Next.js + Supabase. Pergunta: existe evidência suficiente no material para PROVAR autorização para cada sink deste handler?"
+ },
+ {
+  "case_id": "B0001-self-scope",
+  "category": "self-scope",
+  "files": {
+   "route.ts": "export async function GET(request,{params}){ try {\nconst {user}=await auth(request); const {data}=await supabaseAdmin.from(\"entries\").select(\"*\").eq(\"user_id\",user.id); return Response.json({data});\n} catch(e){ return jsonError(e); } }"
+  },
+  "entry": "route.ts",
+  "sql": null,
+  "context": "Handler de API Next.js + Supabase. Pergunta: existe evidência suficiente no material para PROVAR autorização para cada sink deste handler?"
+ },
+ {
+  "case_id": "B0002-self-scope",
+  "category": "self-scope",
+  "files": {
+   "route.ts": "export async function POST(request,{params}){ try {\nconst {user}=await auth(request); const b=await request.json(); await supabaseAdmin.from(\"items\").insert({owner_id:user.id,data:b.d}); return Response.json({ok:true});\n} catch(e){ return jsonError(e); } }"
+  },
+  "entry": "route.ts",
+  "sql": null,
+  "context": "Handler de API Next.js + Supabase. Pergunta: existe evidência suficiente no material para PROVAR autorização para cada sink deste handler?"
+ },
+ {
+  "case_id": "B0467-transitive",
+  "category": "transitive",
+  "files": {
+   "route.ts": "export async function POST(request,{params}){ try {\nconst {id}=await params; const {user}=await auth(request); const {data:lineup}=await supabaseAdmin.from(\"lineups\").select(\"id,team_id\").eq(\"id\",id).maybeSingle(); if(!lineup) throw new Error(\"404\"); const {data:member}=await supabaseAdmin.from(\"players\").select(\"id\").eq(\"team_id\",lineup.team_id).eq(\"user_id\",user.id).maybeSingle(); if(!member) throw new Error(\"403\"); await supabaseAdmin.from(\"lineups\").delete().eq(\"id\",id); return Response.json({ok:true});\n} catch(e){ return jsonError(e); } }"
+  },
+  "entry": "route.ts",
+  "sql": null,
+  "context": "Handler de API Next.js + Supabase. Pergunta: existe evidência suficiente no material para PROVAR autorização para cada sink deste handler?"
+ },
+ {
+  "case_id": "B0469-transitive",
+  "category": "transitive",
+  "files": {
+   "route.ts": "export async function POST(request,{params}){ try {\nconst {id}=await params; const {user}=await auth(request); const {data:lineup}=await supabaseAdmin.from(\"lineups\").select(\"id,team_id\").eq(\"id\",id).maybeSingle(); if(!lineup) throw new Error(\"404\"); const {data:member}=await supabaseAdmin.from(\"players\").select(\"id\").eq(\"team_id\",lineup.team_id).eq(\"user_id\",user.id).maybeSingle(); if(!member) throw new Error(\"403\"); await supabaseAdmin.from(\"lineups\").delete().eq(\"id\",id); return Response.json({ok:true});\n} catch(e){ return jsonError(e); } }"
+  },
+  "entry": "route.ts",
+  "sql": null,
+  "context": "Handler de API Next.js + Supabase. Pergunta: existe evidência suficiente no material para PROVAR autorização para cada sink deste handler?"
+ },
+ {
+  "case_id": "B0463-transitive-broken",
+  "category": "transitive-broken",
+  "files": {
+   "route.ts": "export async function POST(request,{params}){ try {\nconst {id,teamId}=await params; const {user}=await auth(request); const {data:lineup}=await supabaseAdmin.from(\"lineups\").select(\"id,team_id\").eq(\"id\",id).maybeSingle(); if(!lineup) throw new Error(\"404\"); const {data:member}=await supabaseAdmin.from(\"players\").select(\"id\").eq(\"team_id\",teamId).eq(\"user_id\",user.id).maybeSingle(); if(!member) throw new Error(\"403\"); await supabaseAdmin.from(\"lineups\").delete().eq(\"id\",id); return Response.json({ok:true});\n} catch(e){ return jsonError(e); } }"
+  },
+  "entry": "route.ts",
+  "sql": null,
+  "context": "Handler de API Next.js + Supabase. Pergunta: existe evidência suficiente no material para PROVAR autorização para cada sink deste handler?"
+ },
+ {
+  "case_id": "B0464-transitive-broken",
+  "category": "transitive-broken",
+  "files": {
+   "route.ts": "export async function POST(request,{params}){ try {\nconst {id,teamId}=await params; const {user}=await auth(request); const {data:lineup}=await supabaseAdmin.from(\"lineups\").select(\"id,team_id\").eq(\"id\",id).maybeSingle(); if(!lineup) throw new Error(\"404\"); const {data:member}=await supabaseAdmin.from(\"players\").select(\"id\").eq(\"team_id\",teamId).eq(\"user_id\",user.id).maybeSingle(); if(!member) throw new Error(\"403\"); await supabaseAdmin.from(\"lineups\").delete().eq(\"id\",id); return Response.json({ok:true});\n} catch(e){ return jsonError(e); } }"
+  },
+  "entry": "route.ts",
+  "sql": null,
+  "context": "Handler de API Next.js + Supabase. Pergunta: existe evidência suficiente no material para PROVAR autorização para cada sink deste handler?"
+ },
+ {
+  "case_id": "B0399-unsupported",
+  "category": "unsupported",
+  "files": {
+   "route.ts": "export const GET = withMiddleware(async (request)=>{ const {data}=await supabaseAdmin.from(\"x\").select(\"*\"); return Response.json({data}); });"
+  },
+  "entry": "route.ts",
+  "sql": null,
+  "context": "Handler de API Next.js + Supabase. Pergunta: existe evidência suficiente no material para PROVAR autorização para cada sink deste handler?"
+ },
+ {
+  "case_id": "B0400-unsupported",
+  "category": "unsupported",
+  "files": {
+   "route.ts": "export const GET = withMiddleware(async (request)=>{ const {data}=await supabaseAdmin.from(\"x\").select(\"*\"); return Response.json({data}); });"
+  },
+  "entry": "route.ts",
+  "sql": null,
+  "context": "Handler de API Next.js + Supabase. Pergunta: existe evidência suficiente no material para PROVAR autorização para cada sink deste handler?"
+ }
+]

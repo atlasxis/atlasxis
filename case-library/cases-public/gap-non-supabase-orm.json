@@ -1,0 +1,23 @@
+{
+  "id": "gap-non-supabase-orm",
+  "title": "GAP: sinks via ORMs não-Supabase (Prisma, Drizzle) e SQL direto",
+  "status": "OBSERVED",
+  "origin": {
+    "project": "observação em corpora externos (não redistribuíveis)",
+    "location": "fora do escopo modelado (supabase-js)",
+    "date": "2026-08-21"
+  },
+  "mechanism": "modelagem de sink e cliente para ORMs além do supabase-js",
+  "oracle_result": { "status": "NOT_ANALYZED", "reasonCode": "NOT_ANALYZED_NO_SINK" },
+  "ground_truth": {
+    "decision": "N/A (gap de cobertura, não erro de decisão)",
+    "source": "construction",
+    "justification": "abstenção correta hoje; suportar Prisma exigiria mapear o modelo de identidade/posse daquele ORM com a mesma disciplina (identidade recurso→sink, guards vivos)."
+  },
+  "evidence": "Sinks de ORMs não modelados produzem NOT_ANALYZED_NO_SINK; nenhum vira veredito.",
+  "code_ref": "docs/LIMITATIONS.md",
+  "fixtures": {},
+  "regression": "coberto pela política de abstenção: sink não modelado ⇒ NOT_ANALYZED, nunca SAFE",
+  "human_validation": "—",
+  "notes": "Sugestão de capacidade futura; não incorporada. Entraria pelo processo dos 10 requisitos com corpus real de cada ORM."
+}

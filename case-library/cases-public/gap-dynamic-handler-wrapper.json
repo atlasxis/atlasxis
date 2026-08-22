@@ -1,0 +1,23 @@
+{
+  "id": "gap-dynamic-handler-wrapper",
+  "title": "GAP: handlers em wrappers dinâmicos (withAuth(handler), HOFs)",
+  "status": "OBSERVED",
+  "origin": {
+    "project": "corpus público sintético + observação em corpora externos",
+    "location": "public-corpus/unsupported",
+    "date": "2026-08-21"
+  },
+  "mechanism": "resolução de wrapper/higher-order function até o handler real (não suportado)",
+  "oracle_result": { "status": "NOT_ANALYZED", "reasonCode": "NOT_ANALYZED_UNSUPPORTED_SYNTAX" },
+  "ground_truth": {
+    "decision": "N/A (gap de cobertura, não erro de decisão)",
+    "source": "construction",
+    "justification": "o motor abstém corretamente (NOT_ANALYZED, nunca CONTROLLED); resolver wrappers estruturalmente simples ampliaria recall sem afrouxar a disciplina de prova."
+  },
+  "evidence": "public-corpus/unsupported e o padrão 17 do adversarial-repo provam que a abstenção é correta hoje.",
+  "code_ref": "public-corpus/unsupported/src/app/api/notes/route.ts",
+  "fixtures": {},
+  "regression": "core/harness/external-public.mjs (unsupported) + core/harness/adversarial-repo.mjs (padrão 17)",
+  "human_validation": "—",
+  "notes": "Registrado como GAP: novo padrão NÃO é implementado imediatamente. Caminho até CERTIFIED exige os 10 requisitos, começando por casos reais de wrapper com semântica clara."
+}

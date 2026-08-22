@@ -1,0 +1,254 @@
+[
+ {
+  "case_id": "B0415-admin-only",
+  "human_decision": "",
+  "human_reason": "",
+  "confidence": ""
+ },
+ {
+  "case_id": "B0416-admin-only",
+  "human_decision": "",
+  "human_reason": "",
+  "confidence": ""
+ },
+ {
+  "case_id": "B0125-admin-owner",
+  "human_decision": "",
+  "human_reason": "",
+  "confidence": ""
+ },
+ {
+  "case_id": "B0126-admin-owner",
+  "human_decision": "",
+  "human_reason": "",
+  "confidence": ""
+ },
+ {
+  "case_id": "B0487-adversarial-nameonly",
+  "human_decision": "",
+  "human_reason": "",
+  "confidence": ""
+ },
+ {
+  "case_id": "B0488-adversarial-nameonly",
+  "human_decision": "",
+  "human_reason": "",
+  "confidence": ""
+ },
+ {
+  "case_id": "B0227-authed-no-rls",
+  "human_decision": "",
+  "human_reason": "",
+  "confidence": ""
+ },
+ {
+  "case_id": "B0228-authed-no-rls",
+  "human_decision": "",
+  "human_reason": "",
+  "confidence": ""
+ },
+ {
+  "case_id": "B0439-cross-file-helper",
+  "human_decision": "",
+  "human_reason": "",
+  "confidence": ""
+ },
+ {
+  "case_id": "B0440-cross-file-helper",
+  "human_decision": "",
+  "human_reason": "",
+  "confidence": ""
+ },
+ {
+  "case_id": "B0375-dead-guard",
+  "human_decision": "",
+  "human_reason": "",
+  "confidence": ""
+ },
+ {
+  "case_id": "B0376-dead-guard",
+  "human_decision": "",
+  "human_reason": "",
+  "confidence": ""
+ },
+ {
+  "case_id": "B0517-fake-admin-name",
+  "human_decision": "",
+  "human_reason": "",
+  "confidence": ""
+ },
+ {
+  "case_id": "B0518-fake-admin-name",
+  "human_decision": "",
+  "human_reason": "",
+  "confidence": ""
+ },
+ {
+  "case_id": "B0165-idor-service-role",
+  "human_decision": "",
+  "human_reason": "",
+  "confidence": ""
+ },
+ {
+  "case_id": "B0166-idor-service-role",
+  "human_decision": "",
+  "human_reason": "",
+  "confidence": ""
+ },
+ {
+  "case_id": "B0335-multi-sink-allsafe",
+  "human_decision": "",
+  "human_reason": "",
+  "confidence": ""
+ },
+ {
+  "case_id": "B0336-multi-sink-allsafe",
+  "human_decision": "",
+  "human_reason": "",
+  "confidence": ""
+ },
+ {
+  "case_id": "B0337-multi-sink-mixed",
+  "human_decision": "",
+  "human_reason": "",
+  "confidence": ""
+ },
+ {
+  "case_id": "B0338-multi-sink-mixed",
+  "human_decision": "",
+  "human_reason": "",
+  "confidence": ""
+ },
+ {
+  "case_id": "B0065-post-read",
+  "human_decision": "",
+  "human_reason": "",
+  "confidence": ""
+ },
+ {
+  "case_id": "B0067-post-read",
+  "human_decision": "",
+  "human_reason": "",
+  "confidence": ""
+ },
+ {
+  "case_id": "B0063-post-read-nearmiss",
+  "human_decision": "",
+  "human_reason": "",
+  "confidence": ""
+ },
+ {
+  "case_id": "B0064-post-read-nearmiss",
+  "human_decision": "",
+  "human_reason": "",
+  "confidence": ""
+ },
+ {
+  "case_id": "B0279-rls-admin-or-owner",
+  "human_decision": "",
+  "human_reason": "",
+  "confidence": ""
+ },
+ {
+  "case_id": "B0298-rls-admin-or-owner",
+  "human_decision": "",
+  "human_reason": "",
+  "confidence": ""
+ },
+ {
+  "case_id": "B0276-rls-none",
+  "human_decision": "",
+  "human_reason": "",
+  "confidence": ""
+ },
+ {
+  "case_id": "B0278-rls-none",
+  "human_decision": "",
+  "human_reason": "",
+  "confidence": ""
+ },
+ {
+  "case_id": "B0274-rls-open",
+  "human_decision": "",
+  "human_reason": "",
+  "confidence": ""
+ },
+ {
+  "case_id": "B0292-rls-open",
+  "human_decision": "",
+  "human_reason": "",
+  "confidence": ""
+ },
+ {
+  "case_id": "B0273-rls-owner",
+  "human_decision": "",
+  "human_reason": "",
+  "confidence": ""
+ },
+ {
+  "case_id": "B0275-rls-owner",
+  "human_decision": "",
+  "human_reason": "",
+  "confidence": ""
+ },
+ {
+  "case_id": "B0282-rls-restrictive",
+  "human_decision": "",
+  "human_reason": "",
+  "confidence": ""
+ },
+ {
+  "case_id": "B0283-rls-restrictive",
+  "human_decision": "",
+  "human_reason": "",
+  "confidence": ""
+ },
+ {
+  "case_id": "B0001-self-scope",
+  "human_decision": "",
+  "human_reason": "",
+  "confidence": ""
+ },
+ {
+  "case_id": "B0002-self-scope",
+  "human_decision": "",
+  "human_reason": "",
+  "confidence": ""
+ },
+ {
+  "case_id": "B0467-transitive",
+  "human_decision": "",
+  "human_reason": "",
+  "confidence": ""
+ },
+ {
+  "case_id": "B0469-transitive",
+  "human_decision": "",
+  "human_reason": "",
+  "confidence": ""
+ },
+ {
+  "case_id": "B0463-transitive-broken",
+  "human_decision": "",
+  "human_reason": "",
+  "confidence": ""
+ },
+ {
+  "case_id": "B0464-transitive-broken",
+  "human_decision": "",
+  "human_reason": "",
+  "confidence": ""
+ },
+ {
+  "case_id": "B0399-unsupported",
+  "human_decision": "",
+  "human_reason": "",
+  "confidence": ""
+ },
+ {
+  "case_id": "B0400-unsupported",
+  "human_decision": "",
+  "human_reason": "",
+  "confidence": ""
+ }
+]

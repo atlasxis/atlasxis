@@ -1,0 +1,39 @@
+{
+  "id": "service-role-idor",
+  "title": "IDOR via service_role sem gating (VULNERABLE por evidência positiva)",
+  "status": "CERTIFIED",
+  "origin": {
+    "project": "corpus público sintético (padrão observado em auditoria privada, não redistribuível)",
+    "location": "public-corpus/service-role-vuln",
+    "date": "2026-08-21"
+  },
+  "mechanism": "absence-of-gating + service_role (bypassa RLS)",
+  "oracle_result": { "status": "VULNERABLE", "reasonCode": "VULNERABLE_NO_GATING_SERVICE_ROLE" },
+  "ground_truth": {
+    "decision": "VULNERABLE",
+    "source": "construction",
+    "justification": "id controlável pelo cliente alcança um sink service_role sem nenhuma verificação de posse/participação em qualquer caminho vivo; por construção, qualquer usuário deleta o recurso de terceiros."
+  },
+  "evidence": "ProofChain com fonte controlável → recurso → sink service_role e prova de ausência de guard vivo. Contraprova: a versão com post-read gate (public-corpus/post-read-gate) deixa de ser VULNERABLE.",
+  "code_ref": "public-corpus/service-role-vuln/src/app/api/notes/[id]/route.ts",
+  "fixtures": {
+    "positive": ["public-corpus/service-role-vuln/src/app/api/notes/[id]/route.ts"],
+    "negative": ["public-corpus/post-read-gate/src/app/api/notes/[id]/route.ts"],
+    "adversarial": ["core/harness/adversarial-repo.mjs"]
+  },
+  "regression": "core/harness/external-public.mjs + core/benchmark/run.mjs (categoria idor-service-role)",
+  "certification": {
+    "real_case": true,
+    "ground_truth": true,
+    "fixture_positive": true,
+    "fixture_negative": true,
+    "fixture_adversarial": true,
+    "regression_pass": true,
+    "mutation_pass": true,
+    "benchmark_pass": true,
+    "external_pass": true,
+    "no_false_control_increase": true
+  },
+  "human_validation": "Mecanismo derivado de caso real confirmado por leitura humana em auditoria privada; a fixture pública é uma reprodução sintética equivalente. Auditoria cega independente do corpus público permanece PENDING.",
+  "notes": "Critério fundador: VULNERABLE exige evidência positiva de ausência de gating, nunca apenas 'não achei ownership'."
+}

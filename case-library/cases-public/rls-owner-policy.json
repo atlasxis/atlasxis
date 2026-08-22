@@ -1,0 +1,39 @@
+{
+  "id": "rls-owner-policy",
+  "title": "RLS owner-scoped parseada prova autorização (cliente authenticated)",
+  "status": "CERTIFIED",
+  "origin": {
+    "project": "corpus público sintético (padrão Supabase RLS)",
+    "location": "public-corpus/rls-owner",
+    "date": "2026-08-21"
+  },
+  "mechanism": "rls-policy-owner: ENABLE RLS + política aplicável à operação com predicado auth.uid()=owner; cliente sujeito a RLS",
+  "oracle_result": { "status": "CONTROLLED", "reasonCode": "CONTROLLED_RLS_POLICY_OWNER" },
+  "ground_truth": {
+    "decision": "CONTROLLED",
+    "source": "construction",
+    "justification": "a migração habilita RLS e cria política de select restrita a auth.uid()=user_id; o cliente é authenticated (sujeito a RLS), logo o acesso é delimitado ao dono."
+  },
+  "evidence": "ProofChain declarativa: política parseada + operação coberta + cliente sujeito a RLS. Contraprova: política permissiva (using true) ou ausência de política degrada para INSUFFICIENT_RLS_*.",
+  "code_ref": "public-corpus/rls-owner/src/app/api/notes/[id]/route.ts",
+  "fixtures": {
+    "positive": ["public-corpus/rls-owner/supabase/policy.sql"],
+    "negative": ["core/harness/adversarial-repo.mjs"],
+    "adversarial": ["core/harness/adversarial-repo.mjs"]
+  },
+  "regression": "core/harness/external-public.mjs (rls-owner) + core/harness/adversarial-repo.mjs (padrões 09/10/11) + core/benchmark/run.mjs (rls-owner, rls-open, rls-none)",
+  "certification": {
+    "real_case": true,
+    "ground_truth": true,
+    "fixture_positive": true,
+    "fixture_negative": true,
+    "fixture_adversarial": true,
+    "regression_pass": true,
+    "mutation_pass": true,
+    "benchmark_pass": true,
+    "external_pass": true,
+    "no_false_control_increase": true
+  },
+  "human_validation": "Semântica de RLS por dono verificada por construção do SQL; auditoria cega independente PENDING.",
+  "notes": "Só CONTROLLED quando a política é owner-scoped E cobre a operação E o cliente é sujeito a RLS. Política permissiva (padrão 10) ou desconhecida (padrão 11) → abstenção."
+}

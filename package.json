@@ -1,0 +1,24 @@
+{
+  "name": "oracle-core",
+  "version": "1.0.0",
+  "description": "ORÁCULO CORE — Authorization Proof Engine. Certifica evidência estrutural de autorização por sink; nunca afirma ausência de vulnerabilidades.",
+  "type": "module",
+  "license": "MIT",
+  "private": true,
+  "bin": {
+    "oracle": "core/cli.mjs"
+  },
+  "scripts": {
+    "ci": "node core/ci.mjs --public",
+    "ci:public": "node core/ci.mjs --public",
+    "scan": "node core/cli.mjs scan",
+    "benchmark": "node core/benchmark/run.mjs",
+    "test": "node core/ci.mjs --public"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "typescript": "^5.4.0"
+  }
+}

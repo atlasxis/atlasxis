@@ -1,0 +1,63 @@
+{
+  "$comment": "Schema documental da Case Library. A validação executável está em validate.mjs (sem dependências).",
+  "type": "object",
+  "required": ["id", "title", "status", "origin", "mechanism", "oracle_result", "ground_truth", "evidence"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+    "title": { "type": "string" },
+    "status": { "enum": ["OBSERVED", "REVIEWED", "VALIDATED", "CANDIDATE", "CERTIFIED", "REJECTED"] },
+    "origin": {
+      "type": "object",
+      "required": ["project", "location", "date"],
+      "properties": {
+        "project": { "type": "string" },
+        "location": { "type": "string" },
+        "date": { "type": "string", "format": "date" }
+      }
+    },
+    "mechanism": { "type": "string", "$comment": "mecanismo de autorização/vulnerabilidade envolvido" },
+    "oracle_result": {
+      "type": "object",
+      "$comment": "decisão do motor sobre o caso — REGISTRO, nunca fonte do ground truth",
+      "properties": { "status": { "type": "string" }, "reasonCode": { "type": "string" } }
+    },
+    "ground_truth": {
+      "type": "object",
+      "required": ["decision", "source", "justification"],
+      "properties": {
+        "decision": { "type": "string" },
+        "source": { "enum": ["human", "construction"], "$comment": "'oracle' é PROIBIDO — seria circular" },
+        "justification": { "type": "string" }
+      }
+    },
+    "evidence": { "type": "string" },
+    "code_ref": { "type": "string", "$comment": "caminho no repo para o código do caso" },
+    "fixtures": {
+      "type": "object",
+      "properties": {
+        "positive": { "type": "array", "items": { "type": "string" } },
+        "negative": { "type": "array", "items": { "type": "string" } },
+        "adversarial": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "regression": { "type": "string", "$comment": "harness que cobre o caso" },
+    "certification": {
+      "type": "object",
+      "$comment": "os 10 requisitos; todos true é condição necessária para CERTIFIED",
+      "properties": {
+        "real_case": { "type": "boolean" },
+        "ground_truth": { "type": "boolean" },
+        "fixture_positive": { "type": "boolean" },
+        "fixture_negative": { "type": "boolean" },
+        "fixture_adversarial": { "type": "boolean" },
+        "regression_pass": { "type": "boolean" },
+        "mutation_pass": { "type": "boolean" },
+        "benchmark_pass": { "type": "boolean" },
+        "external_pass": { "type": "boolean" },
+        "no_false_control_increase": { "type": "boolean" }
+      }
+    },
+    "human_validation": { "type": "string" },
+    "notes": { "type": "string" }
+  }
+}

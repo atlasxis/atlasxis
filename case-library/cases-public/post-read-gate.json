@@ -1,0 +1,39 @@
+{
+  "id": "post-read-gate",
+  "title": "Post-read ownership gate (CONTROLLED com ProofChain íntegra)",
+  "status": "CERTIFIED",
+  "origin": {
+    "project": "corpus público sintético (padrão observado em auditoria privada e em corpora externos, não redistribuíveis)",
+    "location": "public-corpus/post-read-gate e public-corpus/parent-child",
+    "date": "2026-08-21"
+  },
+  "mechanism": "post-read-gate: recurso lido primeiro, dono comparado a user.id, rejeição antes do efeito",
+  "oracle_result": { "status": "CONTROLLED", "reasonCode": "CONTROLLED_POST_READ_GATE" },
+  "ground_truth": {
+    "decision": "CONTROLLED",
+    "source": "construction",
+    "justification": "o handler lê o recurso, compara o dono com o usuário autenticado e rejeita antes de escrever; identidade do recurso lido = recurso do sink."
+  },
+  "evidence": "ProofChain: identidade recurso lido = recurso do sink; gate vivo rejeita quando o dono difere. A variante parent-child prova posse transitiva (dono do pai modera o filho).",
+  "code_ref": "public-corpus/post-read-gate/src/app/api/notes/[id]/route.ts",
+  "fixtures": {
+    "positive": ["public-corpus/post-read-gate/src/app/api/notes/[id]/route.ts", "public-corpus/parent-child/src/app/api/comments/[id]/route.ts"],
+    "negative": ["public-corpus/service-role-vuln/src/app/api/notes/[id]/route.ts"],
+    "adversarial": ["core/harness/adversarial-repo.mjs"]
+  },
+  "regression": "core/harness/external-public.mjs + core/harness/adversarial-repo.mjs (padrões 03/04/05/16) + core/benchmark/run.mjs (post-read, post-read-nearmiss)",
+  "certification": {
+    "real_case": true,
+    "ground_truth": true,
+    "fixture_positive": true,
+    "fixture_negative": true,
+    "fixture_adversarial": true,
+    "regression_pass": true,
+    "mutation_pass": true,
+    "benchmark_pass": true,
+    "external_pass": true,
+    "no_false_control_increase": true
+  },
+  "human_validation": "Mecanismo confirmado por leitura humana; fixture pública sintética equivalente. Auditoria cega independente PENDING.",
+  "notes": "O near-miss (gate compara flag não-owner, ou verifica recurso A e escreve B) deve abster — coberto pelos padrões adversariais 04 e 05."
+}
