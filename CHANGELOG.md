@@ -3,6 +3,13 @@
 Formato: [Keep a Changelog](https://keepachangelog.com/). Versões seguem a tag
 técnica do engine.
 
+## [1.0.1-public] — 2026-10-11
+
+### Corrigido
+- `LICENSE` volta ao texto MIT padrão. A nota de escopo anexada impedia o
+  GitHub de identificar a licença (aparecia como "Other"). A nota continua no
+  README, seção Licença. O engine não mudou.
+
 ## [1.0.0-public] — 2026-08-21
 
 Primeira árvore **pública** distribuível do ORÁCULO CORE.

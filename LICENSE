@@ -19,13 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
----
-
-NOTE ON SCOPE OF THE LICENSE
-
-This license covers the ORÁCULO CORE engine, CLI, documentation, and the
-SYNTHETIC public fixtures under `public-corpus/`. It does not grant any rights
-over third-party code the engine may be run against. The public distribution
-deliberately contains no third-party source code and no private application
-source code — only synthetic fixtures authored for this project.
