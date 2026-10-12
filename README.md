@@ -68,7 +68,7 @@ npx atlasxis scan . --rls ./supabase/migrations
 Run it against one of the synthetic fixtures in this repository:
 
 ```bash
-git clone https://github.com/fisioterapeutah-star/atlasxis.git && cd atlasxis
+git clone https://github.com/atlasxis/atlasxis.git && cd atlasxis
 npm install
 npx atlasxis report public-corpus/service-role-vuln
 ```

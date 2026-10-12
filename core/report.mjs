@@ -91,6 +91,6 @@ export function toSARIF(report) {
   }
   return JSON.stringify({
     $schema: "https://json.schemastore.org/sarif-2.1.0.json", version: "2.1.0",
-    runs: [{ tool: { driver: { name: "Atlasxis", informationUri: "https://github.com/fisioterapeutah-star/atlasxis", version: "1.0.2", rules: Object.values(rules) } }, results }],
+    runs: [{ tool: { driver: { name: "Atlasxis", informationUri: "https://github.com/atlasxis/atlasxis", version: "1.0.3", rules: Object.values(rules) } }, results }],
   }, null, 2);
 }

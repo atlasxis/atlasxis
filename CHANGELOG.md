@@ -3,6 +3,14 @@
 Formato: [Keep a Changelog](https://keepachangelog.com/). Versões seguem a tag
 técnica do engine.
 
+## [1.0.3-public] — 2026-10-12
+
+### Mudado
+- Repositório movido para a organização `atlasxis`:
+  https://github.com/atlasxis/atlasxis. Os endereços antigos redirecionam.
+  README, metadados do pacote npm e o link no SARIF apontam para o novo endereço.
+- Engine inalterado.
+
 ## [1.0.2-public] — 2026-10-12
 
 ### Mudado

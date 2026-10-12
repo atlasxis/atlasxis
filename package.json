@@ -1,6 +1,6 @@
 {
   "name": "atlasxis",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Authorization proof engine for Next.js + Supabase APIs. Proves, per data sink, whether there is structural evidence of authorization — and says so when it can't. Never claims your app is secure.",
   "type": "module",
   "license": "MIT",
@@ -39,11 +39,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fisioterapeutah-star/atlasxis.git"
+    "url": "git+https://github.com/atlasxis/atlasxis.git"
   },
-  "homepage": "https://github.com/fisioterapeutah-star/atlasxis#readme",
+  "homepage": "https://github.com/atlasxis/atlasxis#readme",
   "bugs": {
-    "url": "https://github.com/fisioterapeutah-star/atlasxis/issues"
+    "url": "https://github.com/atlasxis/atlasxis/issues"
   },
   "keywords": [
     "security",
