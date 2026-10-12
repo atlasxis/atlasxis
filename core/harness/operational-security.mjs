@@ -1,4 +1,4 @@
-// ORÁCULO CORE — harness de segurança operacional (FASE E do produto).
+// Atlasxis — harness de segurança operacional (FASE E do produto).
 // Prova que analisar um projeto MALICIOSO não executa código, não escapa do
 // root, não trava, não vaza segredos e respeita limites. Fixtures são
 // construídas em diretório temporário a cada execução (nada é commitado).
@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const CLI = join(__dirname, "..", "cli.mjs");
-const BASE = join(tmpdir(), "oracle-opsec-fixtures");
+const BASE = join(tmpdir(), "atlasxis-opsec-fixtures");
 
 let pass = 0, fail = 0;
 function check(name, cond, detail = "") {

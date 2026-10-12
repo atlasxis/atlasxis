@@ -2,7 +2,7 @@
 
 Gerador: `core/benchmark/generate.mjs`. Runner: `core/benchmark/run.mjs`.
 Ground truth **por construção** (o gerador sabe o padrão que montou), NUNCA
-derivado do resultado do ORÁCULO.
+derivado do resultado do Atlasxis.
 
 ## Escala e resultado
 

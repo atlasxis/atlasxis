@@ -31,7 +31,7 @@ Na primeira execução, **26 survivors** em duas classes — ambas bugs reais:
    sink quando o rid chega pela PK `id` (padrão pai-filho via coluna-container
    permanece válido e preservado — auditado em `posts/[postId]` do projeto-auditado-privado).
 
-Após as correções: 26 → 0 survivors. Isto é a evidência de que o ORÁCULO
+Após as correções: 26 → 0 survivors. Isto é a evidência de que o Atlasxis
 raciocina sobre causalidade, não reconhece padrões — o teste central da diretiva.
 
 ## Classificação de cada resultado

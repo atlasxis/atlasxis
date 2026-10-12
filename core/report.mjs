@@ -1,4 +1,4 @@
-// ORÁCULO CORE — geração de relatório por sink (FASE 27).
+// Atlasxis — geração de relatório por sink (FASE 27).
 // Formatos: json | markdown | sarif. Determinístico (sem timestamps/random).
 
 const CONF = {
@@ -45,7 +45,7 @@ export function toJSON(report) { return JSON.stringify(report, null, 2); }
 
 export function toMarkdown(report) {
   const L = [];
-  L.push("# ORÁCULO — Authorization Proof Report", "");
+  L.push("# Atlasxis — Authorization Proof Report", "");
   L.push("> Certifica a presença de evidência de autorização para os caminhos prováveis. Não certifica ausência de vulnerabilidades.", "");
   L.push("## Resumo por sink", "");
   L.push("| Decisão | Sinks |", "|---|---|");
@@ -91,6 +91,6 @@ export function toSARIF(report) {
   }
   return JSON.stringify({
     $schema: "https://json.schemastore.org/sarif-2.1.0.json", version: "2.1.0",
-    runs: [{ tool: { driver: { name: "ORACLE", informationUri: "https://oraclelab.local", version: "1.0.0", rules: Object.values(rules) } }, results }],
+    runs: [{ tool: { driver: { name: "Atlasxis", informationUri: "https://github.com/fisioterapeutah-star/atlasxis", version: "1.0.2", rules: Object.values(rules) } }, results }],
   }, null, 2);
 }

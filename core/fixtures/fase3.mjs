@@ -1,4 +1,4 @@
-// ORÁCULO CORE — fixtures da FASE 3 (REQUISITO 12: positiva, negativa,
+// Atlasxis — fixtures da FASE 3 (REQUISITO 12: positiva, negativa,
 // adversarial, UNKNOWN e regressão para cada capacidade nova).
 // Expectativas em reason codes (nunca texto livre).
 

@@ -1,6 +1,6 @@
-# ORÁCULO — Modelo de ameaça e segurança do próprio motor
+# Atlasxis — Modelo de ameaça e segurança do próprio motor
 
-## O que o ORÁCULO garante e o que NÃO garante
+## O que o Atlasxis garante e o que NÃO garante
 
 - **Garante**: quando emite `CONTROLLED`, existe uma ProofChain estrutural
   reproduzível (source → resource → authorization → guard → identity → sink)
@@ -33,7 +33,7 @@
 - **Alias por dataflow profundo**: detectado e classificado, nunca vira CONTROLLED.
 - **Truth table ≤14 átomos**: condições maiores não são provadas (fail-closed).
 
-## Segurança do próprio ORÁCULO
+## Segurança do próprio Atlasxis
 
 - **Somente leitura**: o motor nunca escreve no código analisado.
 - **Sem execução do alvo**: análise estática por AST; não executa o código.

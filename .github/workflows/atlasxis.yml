@@ -1,11 +1,11 @@
-# Workflow oficial: roda o CI completo do ORÁCULO no próprio repo (8 gates)
+# Workflow oficial: roda o CI completo do Atlasxis no próprio repo (8 gates)
 # e demonstra o uso da action de scan em PRs.
 #
 # Política documentada (docs/CLI-SPEC.md):
 #   - VULNERABLE comprovado  → falha o job (exit 2)
 #   - INSUFFICIENT/UNVERIFIED → reportado, NÃO falha (nunca tratado como SAFE)
 #   - NOT_ANALYZED            → reportado, NÃO falha (nunca tratado como SAFE)
-name: oracle
+name: atlasxis
 on:
   push:
     branches: [main]
@@ -35,8 +35,8 @@ jobs:
         with:
           node-version: 20
       - run: npm install
-      - name: ORÁCULO scan (fixture de demonstração)
-        uses: ./.github/actions/oracle-scan
+      - name: Atlasxis scan (fixture de demonstração)
+        uses: ./.github/actions/atlasxis-scan
         with:
           path: public-corpus/post-read-gate
         # public-corpus/post-read-gate é um fixture CONTROLLED sintético; um
@@ -45,7 +45,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: oracle-proof-report
+          name: atlasxis-proof-report
           path: |
-            oracle-report.json
-            oracle-proof-report.md
+            atlasxis-report.json
+            atlasxis-proof-report.md

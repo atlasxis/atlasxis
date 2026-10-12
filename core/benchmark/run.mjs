@@ -1,4 +1,4 @@
-// ORÁCULO CORE — runner do benchmark (FASE 5).
+// Atlasxis — runner do benchmark (FASE 5).
 // Mede correção contra ground truth POR CONSTRUÇÃO. Separa explicitamente:
 //   - correctness: expectedDecision == actual (o que um certificador correto deve dar)
 //   - false-control: groundTruth=VULNERABLE mas actual=CONTROLLED (o erro fatal)

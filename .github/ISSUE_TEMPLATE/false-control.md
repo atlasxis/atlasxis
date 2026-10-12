@@ -1,11 +1,11 @@
 ---
 name: False control (CRÍTICO)
-about: O ORÁCULO disse CONTROLLED, mas o acesso NÃO está autorizado
+about: O Atlasxis disse CONTROLLED, mas o acesso NÃO está autorizado
 title: "[false-control] "
 labels: false-control
 ---
 
-<!-- False-control é o erro mais grave: o ORÁCULO afirmou evidência de
+<!-- False-control é o erro mais grave: o Atlasxis afirmou evidência de
 autorização que não existe. NÃO cole código privado ou de terceiros —
 reduza a um exemplo SINTÉTICO mínimo. -->
 
@@ -14,7 +14,7 @@ reduza a um exemplo SINTÉTICO mínimo. -->
 // route.ts (+ lib/sql se necessário)
 ```
 
-## O que o ORÁCULO disse
+## O que o Atlasxis disse
 - Decisão: `CONTROLLED`
 - Reason code:
 - Saída de `node core/cli.mjs report <path>`:

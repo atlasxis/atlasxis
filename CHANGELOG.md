@@ -3,6 +3,24 @@
 Formato: [Keep a Changelog](https://keepachangelog.com/). Versões seguem a tag
 técnica do engine.
 
+## [1.0.2-public] — 2026-10-12
+
+### Mudado
+- **Novo nome: Atlasxis** (antes ORÁCULO CORE). O comando passa a ser
+  `atlasxis` (antes `oracle`) e o arquivo de baseline passa a ser
+  `.atlasxis-baseline.json`.
+- Pacote npm `atlasxis`. O README mandava rodar `npx oracle`, que fora do clone
+  baixaria um pacote de outra pessoa (o nome `oracle` no npm é um driver de
+  banco de dados). Os comandos agora usam `npx atlasxis`.
+- README principal em inglês; versão em português em `README.pt-BR.md`.
+- Action renomeada para `.github/actions/atlasxis-scan`; removido o input
+  `oracle-ref`, que não era usado.
+
+### Inalterado
+- O engine não mudou: as decisões sobre o benchmark, o corpus público e os
+  padrões adversariais são idênticas às da 1.0.1. Só mudaram nomes e textos de
+  saída (cabeçalho do relatório, nome da ferramenta no SARIF, versão impressa).
+
 ## [1.0.1-public] — 2026-10-11
 
 ### Corrigido

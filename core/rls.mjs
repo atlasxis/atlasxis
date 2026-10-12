@@ -1,4 +1,4 @@
-// ORÁCULO CORE — FASE 4: RLS como evidência de primeira classe.
+// Atlasxis — FASE 4: RLS como evidência de primeira classe.
 // Parser estrutural de um SUBSET de SQL (PostgreSQL/Supabase) → RLS IR.
 // Fail-closed em tudo: expressão não classificada = unproven; ambiguidade =
 // nada provado; função só autoriza por CORPO resolvido, nunca por nome.

@@ -1,4 +1,4 @@
-// ORÁCULO CORE — Security IR (FASE 3).
+// Atlasxis — Security IR (FASE 3).
 //
 // Representação intermediária formal do caminho
 //   SOURCE → RESOURCE → AUTHORIZATION → GUARD → IDENTITY → SINK

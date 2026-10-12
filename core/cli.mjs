@@ -1,13 +1,13 @@
 #!/usr/bin/env node
-// ORÁCULO CORE — CLI de produto (v1.0.0).
+// Atlasxis — CLI de produto (v1.0.0).
 //
 // Comandos:
-//   oracle scan <path> [--format json|markdown|sarif] [--rls <dir>] [--ci]
-//   oracle report <path> [--rls <dir>] [--out <file>]
-//   oracle explain <REASON_CODE>
-//   oracle baseline <path>
-//   oracle diff <baseline.json> <path>
-//   oracle version
+//   atlasxis scan <path> [--format json|markdown|sarif] [--rls <dir>] [--ci]
+//   atlasxis report <path> [--rls <dir>] [--out <file>]
+//   atlasxis explain <REASON_CODE>
+//   atlasxis baseline <path>
+//   atlasxis diff <baseline.json> <path>
+//   atlasxis version
 //
 // Exit codes (estáveis, documentados em docs/CLI-SPEC.md):
 //   0 sucesso
@@ -19,7 +19,7 @@
 // Garantias operacionais (FASE E):
 //   - nunca executa código do projeto analisado (análise 100% estática);
 //   - nunca roda lifecycle scripts do alvo (não há npm install do alvo);
-//   - nunca carrega .env do alvo como configuração do ORÁCULO;
+//   - nunca carrega .env do alvo como configuração do Atlasxis;
 //   - symlinks NÃO são seguidos (lstat) — sem escape do root nem loops;
 //   - limites: arquivos, bytes por arquivo, bytes totais, profundidade, tempo;
 //   - saída sanitizada: strings com formato de segredo são redigidas.
@@ -147,7 +147,7 @@ function cmdScan(rootArg, opts) {
   const { analyzed, routes, rls, state } = analyzeProject(root, opts);
   const report = buildReport(analyzed);
   report.meta = {
-    engine: `oracle-core ${PKG.version}`, root: relative(process.cwd(), root) || ".",
+    engine: `atlasxis ${PKG.version}`, root: relative(process.cwd(), root) || ".",
     routes: routes.length, rlsModel: !!rls.model,
     filesRead: state.files, symlinksSkipped: state.symlinksSkipped, oversizedSkipped: state.oversizedSkipped,
   };
@@ -158,7 +158,7 @@ function cmdScan(rootArg, opts) {
   if (opts.ci) {
     const s = report.summary;
     const vuln = s.VULNERABLE || 0, insuf = (s.INSUFFICIENT_EVIDENCE || 0) + (s.OUT_OF_SCOPE_UNVERIFIED || 0), na = s.NOT_ANALYZED || 0;
-    process.stderr.write(`oracle --ci: VULNERABLE=${vuln} INSUFFICIENT/UNVERIFIED=${insuf} NOT_ANALYZED=${na} — INSUFFICIENT e NOT_ANALYZED NÃO significam seguro\n`);
+    process.stderr.write(`atlasxis --ci: VULNERABLE=${vuln} INSUFFICIENT/UNVERIFIED=${insuf} NOT_ANALYZED=${na} — INSUFFICIENT e NOT_ANALYZED NÃO significam seguro\n`);
     if (vuln > 0) process.exitCode = 2;
     if (opts.failOn === "insufficient" && (vuln > 0 || insuf > 0)) process.exitCode = 2;
   }
@@ -169,8 +169,8 @@ function cmdReport(rootArg, opts) {
   const root = resolveRoot(rootArg);
   const { files, analyzed, routes, rls, state } = analyzeProject(root, opts);
   const L = [];
-  L.push("# ORÁCULO — Proof Report por sink", "");
-  L.push(`Engine: oracle-core ${PKG.version} — análise estática; nenhum código do projeto foi executado.`, "");
+  L.push("# Atlasxis — Proof Report por sink", "");
+  L.push(`Engine: atlasxis ${PKG.version} — análise estática; nenhum código do projeto foi executado.`, "");
   L.push("> Este relatório afirma somente: (a) caminhos com evidência suficiente de autorização; (b) caminhos com evidência suficiente de vulnerabilidade; (c) o que não foi possível provar. Ele NUNCA afirma \"o sistema está seguro\".", "");
   L.push(`Rotas descobertas: ${routes.length} · arquivos lidos: ${state.files} · symlinks ignorados: ${state.symlinksSkipped} · RLS corpus: ${rls.model ? "sim" : "não"}`, "");
   const order = ["VULNERABLE", "CONTROLLED", "INSUFFICIENT_EVIDENCE", "OUT_OF_SCOPE_UNVERIFIED", "OUT_OF_SCOPE_PROVEN", "NOT_ANALYZED"];
@@ -228,7 +228,7 @@ function cmdReport(rootArg, opts) {
 
 function cmdExplain(code) {
   if (!code) {
-    emit("uso: oracle explain <REASON_CODE>\n\ncódigos disponíveis:\n");
+    emit("uso: atlasxis explain <REASON_CODE>\n\ncódigos disponíveis:\n");
     for (const k of Object.keys(EXPLANATIONS).sort()) emit(`  ${k}\n`);
     process.exitCode = 1; return;
   }
@@ -246,8 +246,8 @@ function cmdBaseline(rootArg, opts) {
   const { analyzed } = analyzeProject(root, opts);
   const report = buildReport(analyzed);
   const base = report.findings.map((f) => ({ path: f.path, method: f.method, resource: f.resource, operation: f.operation, decision: f.decision, reasonCode: f.reasonCode }));
-  writeFileSync(join(root, ".oracle-baseline.json"), JSON.stringify(base, null, 2));
-  process.stdout.write(`baseline escrito: ${base.length} sinks em .oracle-baseline.json\n`);
+  writeFileSync(join(root, ".atlasxis-baseline.json"), JSON.stringify(base, null, 2));
+  process.stdout.write(`baseline escrito: ${base.length} sinks em .atlasxis-baseline.json\n`);
 }
 
 function cmdDiff(baselinePath, rootArg, opts) {
@@ -272,7 +272,7 @@ function cmdDiff(baselinePath, rootArg, opts) {
 }
 
 function cmdVersion() {
-  process.stdout.write(`oracle-core ${PKG.version}\n`);
+  process.stdout.write(`atlasxis ${PKG.version}\n`);
 }
 
 // ---------------- entrada ----------------
@@ -291,18 +291,18 @@ function parseArgs(argv) {
   return { opts, pos };
 }
 
-const USAGE = `ORÁCULO CORE — Authorization Proof Engine (${PKG.version})
+const USAGE = `Atlasxis — Authorization Proof Engine (${PKG.version})
 
 Certifica evidência estrutural de autorização por sink.
 Nunca afirma "seguro" — afirma somente: provado controlado, provado vulnerável, ou não foi possível provar.
 
 Uso:
-  oracle scan <path> [--format json|markdown|sarif] [--rls <dir>] [--ci] [--fail-on insufficient] [--timeout <s>]
-  oracle report <path> [--rls <dir>] [--out <arquivo.md>]
-  oracle explain <REASON_CODE>
-  oracle baseline <path>
-  oracle diff <baseline.json> <path>
-  oracle version
+  atlasxis scan <path> [--format json|markdown|sarif] [--rls <dir>] [--ci] [--fail-on insufficient] [--timeout <s>]
+  atlasxis report <path> [--rls <dir>] [--out <arquivo.md>]
+  atlasxis explain <REASON_CODE>
+  atlasxis baseline <path>
+  atlasxis diff <baseline.json> <path>
+  atlasxis version
 
 Exit codes: 0 ok · 1 uso/erro · 2 política --ci violada · 3 caminho inválido · 4 limite operacional
 `;

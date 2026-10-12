@@ -1,4 +1,4 @@
-# PRODUCT-SPEC — ORÁCULO CORE
+# PRODUCT-SPEC — Atlasxis
 
 ## Proposta de valor
 

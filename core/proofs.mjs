@@ -1,4 +1,4 @@
-// ORÁCULO CORE — mecanismos de prova (porta estrutural do analyzer6 sobre o IR,
+// Atlasxis — mecanismos de prova (porta estrutural do analyzer6 sobre o IR,
 // com a lógica de gates reescrita em Authorization IR em vez de texto).
 // Cada prova retorna { proven, ...componentes IR } — nunca uma frase.
 

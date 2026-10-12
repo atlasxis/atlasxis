@@ -1,4 +1,4 @@
-// ORÁCULO CORE — reason codes estáveis (REQUISITO 8).
+// Atlasxis — reason codes estáveis (REQUISITO 8).
 // A decisão é sempre (status, reasonCode). Texto livre existe apenas como
 // explicação gerada a partir da prova, nunca como mecanismo de decisão.
 

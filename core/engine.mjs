@@ -1,4 +1,4 @@
-// ORÁCULO CORE — decision engine (FASE 3).
+// Atlasxis — decision engine (FASE 3).
 // Unidade de decisão: a cadeia SOURCE → AUTHORIZATION → SINK. Cada sink recebe
 // sua própria Decision com ProofChain; o veredito do handler é DERIVADO dos
 // sinks (REQUISITO 1), nunca o contrário.

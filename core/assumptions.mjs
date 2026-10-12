@@ -1,4 +1,4 @@
-// ORÁCULO CORE — catálogo de assumptions explícitas (REQUISITOS 5 e 6).
+// Atlasxis — catálogo de assumptions explícitas (REQUISITOS 5 e 6).
 // Toda regra semântica que depende de convenção (não de prova estrutural)
 // vira uma assumption identificada e registrada na ProofChain da decisão.
 // Uma assumption nunca é silenciosamente convertida em fato.

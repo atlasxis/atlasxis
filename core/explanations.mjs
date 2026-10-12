@@ -1,4 +1,4 @@
-// ORÁCULO CORE — explicações estáveis por reason code (FASE C do produto).
+// Atlasxis — explicações estáveis por reason code (FASE C do produto).
 // Dados, não lógica: nada aqui decide status. A decisão vem do engine;
 // este mapa apenas traduz (status, reasonCode) para linguagem humana.
 

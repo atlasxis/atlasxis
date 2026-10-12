@@ -19,16 +19,16 @@ executado pela máquina em nome do humano.
 
 - `blind-corpus.json` — 42 casos (21 categorias × 2). Cada caso tem **apenas**
   `case_id`, `category`, `files` (código), `entry`, `sql`, `context`. **Não**
-  contém a decisão do ORÁCULO, reason code, ProofChain nem expectativa.
+  contém a decisão do Atlasxis, reason code, ProofChain nem expectativa.
 - `auditor-form.json` — formulário vazio (42 linhas). O auditor preenche.
 - `SEALED-ground-truth.json` — gabarito **por construção** (SAFE/VULNERABLE/
-  UNKNOWN). **NÃO abrir antes da classificação humana.** Não é a decisão do ORÁCULO.
+  UNKNOWN). **NÃO abrir antes da classificação humana.** Não é a decisão do Atlasxis.
 - `compare.mjs` — comparador read-only (só roda com o formulário preenchido).
 
 ## Protocolo (ordem obrigatória)
 
 1. **Isolamento.** O auditor recebe somente `blind-corpus.json` e
-   `auditor-form.json`. Não vê `SEALED-ground-truth.json` nem a saída do ORÁCULO.
+   `auditor-form.json`. Não vê `SEALED-ground-truth.json` nem a saída do Atlasxis.
 2. **Classificação humana.** Para cada caso, o auditor preenche em
    `auditor-form.json`:
    - `human_decision` ∈ { `CONTROLLED`, `VULNERABLE`, `INSUFFICIENT`, `NOT_ANALYZED` };
@@ -38,19 +38,19 @@ executado pela máquina em nome do humano.
    sink, `CONTROLLED`; se há acesso não autorizado alcançável, `VULNERABLE`; se
    não dá para provar nem uma coisa nem outra, `INSUFFICIENT`; se o código não é
    estruturalmente analisável, `NOT_ANALYZED`.
-3. **Execução do ORÁCULO.** Só **depois** de o formulário estar preenchido:
+3. **Execução do Atlasxis.** Só **depois** de o formulário estar preenchido:
    ```bash
    node blind-validation/compare.mjs
    ```
-   O comparador roda o ORÁCULO sobre o mesmo material, abre o gabarito selado e
+   O comparador roda o Atlasxis sobre o mesmo material, abre o gabarito selado e
    emite o relatório. Com o formulário vazio ele recusa (PENDING) — por design.
 4. **Registro.** O relatório apresenta, sem alterar o corpus nem o gabarito:
-   - **false-control** (ORÁCULO CONTROLLED sobre gt VULNERABLE) — erro grave;
-   - **false-vuln** (ORÁCULO VULNERABLE sobre gt SAFE/UNKNOWN);
+   - **false-control** (Atlasxis CONTROLLED sobre gt VULNERABLE) — erro grave;
+   - **false-vuln** (Atlasxis VULNERABLE sobre gt SAFE/UNKNOWN);
    - **CONTROLLED sobre UNKNOWN** (afirmou prova sem base) — erro;
    - **control TP/FN** e **vuln TP/FN** (FN = abstenção; coverage, não erro);
    - contagem de **INSUFFICIENT / NOT_ANALYZED / OUT_OF_SCOPE**;
-   - **concordância humano × ORÁCULO** e **humano × ground truth**;
+   - **concordância humano × Atlasxis** e **humano × ground truth**;
    - lista de **divergências** com a justificativa humana.
 
 ## Regras invioláveis

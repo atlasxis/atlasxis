@@ -1,19 +1,19 @@
 # CLI — especificação (v1.0.0)
 
-Binário: `oracle` (`core/cli.mjs`, via `npm install` → `bin`).
+Binário: `atlasxis` (`core/cli.mjs`, via `npm install` → `bin`).
 Análise 100% estática: **nenhum código do projeto analisado é executado**.
 
 ## Comandos
 
 | Comando | Função |
 |---|---|
-| `oracle scan <path>` | Analisa o projeto e emite o relatório (`--format json\|markdown\|sarif`) |
-| `oracle scan <path> --ci` | Saída JSON + política de CI (exit 2 se houver VULNERABLE) |
-| `oracle report <path>` | Proof Report por sink: arquivo, linha, ProofChain completa (`--out <f.md>`) |
-| `oracle explain <REASON_CODE>` | Explica um reason code: status, significado, o que prova, o que não prova |
-| `oracle baseline <path>` | Grava `.oracle-baseline.json` com as decisões atuais |
-| `oracle diff <baseline> <path>` | Regressões de autorização vs baseline (exit 1 se houver) |
-| `oracle version` | Versão do engine |
+| `atlasxis scan <path>` | Analisa o projeto e emite o relatório (`--format json\|markdown\|sarif`) |
+| `atlasxis scan <path> --ci` | Saída JSON + política de CI (exit 2 se houver VULNERABLE) |
+| `atlasxis report <path>` | Proof Report por sink: arquivo, linha, ProofChain completa (`--out <f.md>`) |
+| `atlasxis explain <REASON_CODE>` | Explica um reason code: status, significado, o que prova, o que não prova |
+| `atlasxis baseline <path>` | Grava `.atlasxis-baseline.json` com as decisões atuais |
+| `atlasxis diff <baseline> <path>` | Regressões de autorização vs baseline (exit 1 se houver) |
+| `atlasxis version` | Versão do engine |
 
 Flags: `--rls <dir>` (corpus SQL), `--fail-on insufficient` (endurece a política
 de CI), `--timeout <s>` (padrão 120 s), `--out <arquivo>` (report).

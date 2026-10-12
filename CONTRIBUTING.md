@@ -1,6 +1,6 @@
-# Contribuindo com o ORÁCULO
+# Contribuindo com o Atlasxis
 
-O ORÁCULO evolui por **evidência**, não por opinião. O princípio é
+O Atlasxis evolui por **evidência**, não por opinião. O princípio é
 `CORRETUDE > COBERTURA > CONVENIÊNCIA`. Uma capacidade nova só entra no engine
 depois de provar que não introduz false-control.
 
@@ -8,7 +8,7 @@ depois de provar que não introduz false-control.
 
 Abra uma issue usando um dos templates em `.github/ISSUE_TEMPLATE`:
 
-- **false-control** — o ORÁCULO disse `CONTROLLED` mas o acesso não está
+- **false-control** — o Atlasxis disse `CONTROLLED` mas o acesso não está
   autorizado (o erro mais grave);
 - **false-vulnerable** — disse `VULNERABLE` sem evidência positiva real;
 - **missed-case** — um padrão legítimo que deveria ser provável ficou
@@ -37,7 +37,7 @@ segredos, `.env`, caminhos pessoais e nomes de projetos privados.
 Uma capacidade nova só é `CERTIFIED` (e só então entra no core) com **todos**:
 
 1. caso real; 2. ground truth independente (humano ou por construção —
-**nunca** derivado do próprio ORÁCULO); 3. fixture positiva; 4. negativa;
+**nunca** derivado do próprio Atlasxis); 3. fixture positiva; 4. negativa;
 5. adversarial; 6. regressão verde; 7. mutation verde; 8. benchmark verde;
 9. validação verde; 10. false-control permanece 0.
 
@@ -51,6 +51,6 @@ npm test        # = node core/ci.mjs --public (gates reprodutíveis)
 ```
 
 Todos os gates públicos devem passar, incluindo o scanner de publicação. Não
-altere o contrato do produto (`PRODUCT-CONTRACT.md`): o ORÁCULO nunca afirma
+altere o contrato do produto (`PRODUCT-CONTRACT.md`): o Atlasxis nunca afirma
 "seguro", `INSUFFICIENT`/`NOT_ANALYZED` nunca são `SAFE`, e `VULNERABLE` exige
 evidência positiva.

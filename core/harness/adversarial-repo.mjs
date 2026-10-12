@@ -1,6 +1,6 @@
-// ORÁCULO CORE — teste de repositório adversarial (§7 da diretiva de encerramento).
+// Atlasxis — teste de repositório adversarial (§7 da diretiva de encerramento).
 // Um projeto sintético com 17 padrões deliberados. O requisito NÃO é cobertura
-// máxima: é que, quando o ORÁCULO não conseguir provar, ele ABSTENHA — e que
+// máxima: é que, quando o Atlasxis não conseguir provar, ele ABSTENHA — e que
 // nunca emita false-control nem false-vulnerable.
 
 import { analyzeFileIR } from "../engine.mjs";

@@ -1,7 +1,7 @@
 // Case Library — validador executável (sem dependências).
 // Falha (exit 1) se qualquer caso violar o contrato:
 //   - campos obrigatórios ausentes ou estado inválido;
-//   - ground_truth.source fora de {human, construction} ('oracle' é circular e proibido);
+//   - ground_truth.source fora de {human, construction} (derivar do próprio motor é circular e proibido);
 //   - CERTIFIED sem os 10 requisitos todos true;
 //   - CERTIFIED com referência de fixture inexistente;
 //   - id do arquivo ≠ id do caso.
@@ -37,7 +37,7 @@ for (const f of files) {
   if (f !== `${c.id}.json`) err(id, `nome do arquivo (${f}) ≠ id (${c.id}.json)`);
   if (!STATES.includes(c.status)) err(id, `estado inválido: ${c.status}`);
   const src = c.ground_truth?.source;
-  if (!["human", "construction"].includes(src)) err(id, `ground_truth.source proibido/inválido: ${src} (nunca 'oracle')`);
+  if (!["human", "construction"].includes(src)) err(id, `ground_truth.source proibido/inválido: ${src} (nunca o próprio motor)`);
   if (c.status === "CERTIFIED") {
     const cert = c.certification || {};
     for (const k of CERT_KEYS) if (cert[k] !== true) err(id, `CERTIFIED exige certification.${k} === true`);

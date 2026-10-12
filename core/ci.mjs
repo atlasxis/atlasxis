@@ -1,4 +1,4 @@
-// ORÁCULO CORE — CI gate. Roda os gates técnicos e sai != 0 se QUALQUER gate
+// Atlasxis — CI gate. Roda os gates técnicos e sai != 0 se QUALQUER gate
 // que EFETIVAMENTE RODOU falhar. INSUFFICIENT/NOT_ANALYZED nunca falham CI.
 //
 // Dois tipos de gate:

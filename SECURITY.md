@@ -1,4 +1,4 @@
-# SECURITY — política e modelo de segurança do ORÁCULO
+# SECURITY — política e modelo de segurança do Atlasxis
 
 ## O que uma decisão significa
 
@@ -10,7 +10,7 @@
 - `OUT_OF_SCOPE_PROVEN` / `OUT_OF_SCOPE_UNVERIFIED` = fora do modelo de segurança
   (com/sem prova).
 
-**O ORÁCULO nunca afirma ausência de vulnerabilidades.**
+**O Atlasxis nunca afirma ausência de vulnerabilidades.**
 
 ## Invariantes constitucionais (não relaxáveis)
 
@@ -31,7 +31,7 @@
 16. Erro de parsing não produz CONTROLLED.
 17. Ambiguidade não produz CONTROLLED.
 18. Código não suportado → INSUFFICIENT/NOT_ANALYZED.
-19. O ORÁCULO nunca afirma ausência de vulnerabilidade.
+19. O Atlasxis nunca afirma ausência de vulnerabilidade.
 20. CONTROLLED = evidência estrutural suficiente de autorização para o sink.
 
 Cada invariante é exercitado por fixtures e/ou pelo `validateDecision` executável

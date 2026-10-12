@@ -1,17 +1,17 @@
 // Validação humana cega — comparador (READ-ONLY).
-// Compara: humano × ORÁCULO × ground truth selado (por construção).
+// Compara: humano × Atlasxis × ground truth selado (por construção).
 // NUNCA altera o ground truth nem o corpus. NUNCA preenche o formulário.
 // Só roda quando auditor-form.json tiver ao menos uma classificação humana real.
 //
 // Ground truth (selado): SAFE | VULNERABLE | UNKNOWN (semântico, por construção).
-// ORÁCULO: CONTROLLED | VULNERABLE | INSUFFICIENT_EVIDENCE | NOT_ANALYZED | OUT_OF_SCOPE_*.
+// Atlasxis: CONTROLLED | VULNERABLE | INSUFFICIENT_EVIDENCE | NOT_ANALYZED | OUT_OF_SCOPE_*.
 // Humano: CONTROLLED | VULNERABLE | INSUFFICIENT | NOT_ANALYZED.
 //
 // Regras de correção (CORRETUDE > COBERTURA):
-//   - false-control  = ORÁCULO CONTROLLED, mas gt = VULNERABLE   (erro grave)
-//   - false-vuln     = ORÁCULO VULNERABLE, mas gt ∈ {SAFE,UNKNOWN}
-//   - control TP     = ORÁCULO CONTROLLED e gt = SAFE
-//   - vuln TP        = ORÁCULO VULNERABLE e gt = VULNERABLE
+//   - false-control  = Atlasxis CONTROLLED, mas gt = VULNERABLE   (erro grave)
+//   - false-vuln     = Atlasxis VULNERABLE, mas gt ∈ {SAFE,UNKNOWN}
+//   - control TP     = Atlasxis CONTROLLED e gt = SAFE
+//   - vuln TP        = Atlasxis VULNERABLE e gt = VULNERABLE
 //   - abstenção (INSUFFICIENT/NOT_ANALYZED/OOS) NUNCA é SAFE; abster num caso
 //     realmente vulnerável é FN de COBERTURA (não é afirmação incorreta).
 
@@ -34,11 +34,11 @@ if (!filled.length) {
   process.exit(0);
 }
 
-// decisão do ORÁCULO por caso (o motor roda sobre o mesmo material que o humano viu)
-const oracle = {};
+// decisão do Atlasxis por caso (o motor roda sobre o mesmo material que o humano viu)
+const engineDecision = {};
 for (const c of corpus) {
   const rls = c.sql ? { model: parseSqlCorpus(c.sql), declared: {}, options: {} } : {};
-  oracle[c.case_id] = analyzeFileIR(c.files, c.entry, rls)[0].decision.status;
+  engineDecision[c.case_id] = analyzeFileIR(c.files, c.entry, rls)[0].decision.status;
 }
 const gt = Object.fromEntries(sealed.map((s) => [s.case_id, s.ground_truth]));
 
@@ -50,20 +50,20 @@ const M = {
   controlTP: 0, controlFN: 0,      // gt SAFE
   vulnTP: 0, vulnFN: 0,            // gt VULNERABLE
   falseControl: 0, falseVuln: 0,  // erros de correção
-  controlledOnUnknown: 0,         // ORÁCULO CONTROLLED sobre gt UNKNOWN (erro: afirmou prova sem base)
+  controlledOnUnknown: 0,         // Atlasxis CONTROLLED sobre gt UNKNOWN (erro: afirmou prova sem base)
   insufficient: 0, notAnalyzed: 0, outOfScope: 0,
   humanOracleAgree: 0, humanGtCorrect: 0,
 };
 const divergences = [];
 
-console.log("caso                         humano        oráculo       gt");
+console.log("caso                         humano        Atlasxis       gt");
 console.log("─".repeat(74));
 for (const f of filled) {
-  const oc = norm(oracle[f.case_id]);
+  const oc = norm(engineDecision[f.case_id]);
   const h = norm(f.human_decision);
   const g = String(gt[f.case_id] || "").toUpperCase();
 
-  if (isAbstention(oc)) { if (norm(oracle[f.case_id]) === "INSUFFICIENT") M.insufficient++; else if (norm(oracle[f.case_id]) === "NOT_ANALYZED") M.notAnalyzed++; else M.outOfScope++; }
+  if (isAbstention(oc)) { if (norm(engineDecision[f.case_id]) === "INSUFFICIENT") M.insufficient++; else if (norm(engineDecision[f.case_id]) === "NOT_ANALYZED") M.notAnalyzed++; else M.outOfScope++; }
   if (oc === "CONTROLLED" && g === "VULNERABLE") M.falseControl++;
   if (oc === "CONTROLLED" && g === "UNKNOWN") M.controlledOnUnknown++;
   if (oc === "VULNERABLE" && (g === "SAFE" || g === "UNKNOWN")) M.falseVuln++;
@@ -76,11 +76,11 @@ for (const f of filled) {
   if (humanCorrect) M.humanGtCorrect++;
 
   const flag = h === oc ? " " : "≠";
-  if (h !== oc) divergences.push({ case_id: f.case_id, human: h, oracle: oc, gt: g, reason: f.human_reason || "" });
+  if (h !== oc) divergences.push({ case_id: f.case_id, human: h, engine: oc, gt: g, reason: f.human_reason || "" });
   console.log(`${f.case_id.padEnd(28)} ${h.padEnd(13)} ${oc.padEnd(13)} ${g.padEnd(10)} ${flag}`);
 }
 
-console.log("\n===== MÉTRICAS (ORÁCULO × ground truth selado) =====");
+console.log("\n===== MÉTRICAS (Atlasxis × ground truth selado) =====");
 console.log(`casos avaliados: ${M.n}/42`);
 console.log(`false-control (CONTROLLED sobre gt VULNERABLE): ${M.falseControl}  ${M.falseControl ? "✗ ERRO GRAVE" : "✓"}`);
 console.log(`false-vuln (VULNERABLE sobre gt SAFE/UNKNOWN):   ${M.falseVuln}  ${M.falseVuln ? "✗" : "✓"}`);
@@ -89,10 +89,10 @@ console.log(`control TP / (TP+FN):  ${M.controlTP}/${M.controlTP + M.controlFN} 
 console.log(`vuln TP / (TP+FN):     ${M.vulnTP}/${M.vulnTP + M.vulnFN}   (FN = abstenção sobre caso vulnerável; coverage, não erro)`);
 console.log(`abstenções: INSUFFICIENT=${M.insufficient}  NOT_ANALYZED=${M.notAnalyzed}  OUT_OF_SCOPE=${M.outOfScope}`);
 console.log("\n===== HUMANO =====");
-console.log(`concordância humano × oráculo: ${M.humanOracleAgree}/${M.n}`);
+console.log(`concordância humano × Atlasxis: ${M.humanOracleAgree}/${M.n}`);
 console.log(`humano correto vs ground truth: ${M.humanGtCorrect}/${M.n}`);
-console.log(`divergências humano × oráculo: ${divergences.length}`);
-for (const d of divergences) console.log(`  ${d.case_id}: humano=${d.human} oráculo=${d.oracle} gt=${d.gt}${d.reason ? ` — "${d.reason}"` : ""}`);
+console.log(`divergências humano × Atlasxis: ${divergences.length}`);
+for (const d of divergences) console.log(`  ${d.case_id}: humano=${d.human} Atlasxis=${d.engine} gt=${d.gt}${d.reason ? ` — "${d.reason}"` : ""}`);
 
 const criticalFail = M.falseControl > 0 || M.falseVuln > 0 || M.controlledOnUnknown > 0;
 console.log(`\nVEREDITO: ${criticalFail ? "✗ há erro de correção — investigar (NUNCA ajustar fixture/engine para esconder)" : "✓ nenhum erro de correção detectado"}`);

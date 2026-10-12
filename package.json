@@ -1,12 +1,34 @@
 {
-  "name": "oracle-core",
-  "version": "1.0.0",
-  "description": "ORÁCULO CORE — Authorization Proof Engine. Certifica evidência estrutural de autorização por sink; nunca afirma ausência de vulnerabilidades.",
+  "name": "atlasxis",
+  "version": "1.0.2",
+  "description": "Authorization proof engine for Next.js + Supabase APIs. Proves, per data sink, whether there is structural evidence of authorization — and says so when it can't. Never claims your app is secure.",
   "type": "module",
   "license": "MIT",
-  "private": true,
   "bin": {
-    "oracle": "core/cli.mjs"
+    "atlasxis": "core/cli.mjs"
+  },
+  "files": [
+    "core/cli.mjs",
+    "core/engine.mjs",
+    "core/extract.mjs",
+    "core/proofs.mjs",
+    "core/ir.mjs",
+    "core/rls.mjs",
+    "core/report.mjs",
+    "core/explanations.mjs",
+    "core/reason-codes.mjs",
+    "core/assumptions.mjs",
+    "core/authz.mjs",
+    "README.md",
+    "README.pt-BR.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "typescript": "^5.4.0"
   },
   "scripts": {
     "ci": "node core/ci.mjs --public",
@@ -15,10 +37,24 @@
     "benchmark": "node core/benchmark/run.mjs",
     "test": "node core/ci.mjs --public"
   },
-  "engines": {
-    "node": ">=20"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fisioterapeutah-star/atlasxis.git"
   },
-  "dependencies": {
-    "typescript": "^5.4.0"
-  }
+  "homepage": "https://github.com/fisioterapeutah-star/atlasxis#readme",
+  "bugs": {
+    "url": "https://github.com/fisioterapeutah-star/atlasxis/issues"
+  },
+  "keywords": [
+    "security",
+    "authorization",
+    "idor",
+    "bola",
+    "supabase",
+    "rls",
+    "nextjs",
+    "static-analysis",
+    "proof",
+    "access-control"
+  ]
 }

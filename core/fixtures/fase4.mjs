@@ -1,4 +1,4 @@
-// ORÁCULO CORE — fixtures da FASE 4 (RLS parseada como evidência).
+// Atlasxis — fixtures da FASE 4 (RLS parseada como evidência).
 // Cada fixture: { n, handler, reason?, assumptionsInclude?, sql:{arquivo:conteúdo},
 // defaultGrants?, files, entry }. O harness monta o RlsModel via parseSqlCorpus.
 

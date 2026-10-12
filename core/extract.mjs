@@ -1,4 +1,4 @@
-// ORÁCULO CORE — discovery, sources e sinks (REQUISITO 9 + porta estrutural
+// Atlasxis — discovery, sources e sinks (REQUISITO 9 + porta estrutural
 // do findAllSinks do analyzer6, preservando a correção M1: chaves de
 // PropertyAssignment e nomes de membro nunca contam como dado retornado).
 

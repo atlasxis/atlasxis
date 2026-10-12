@@ -1,4 +1,4 @@
-// ORÁCULO CORE — scanner de publicação (proteção contra vazamento).
+// Atlasxis — scanner de publicação (proteção contra vazamento).
 // Varre uma árvore e FALHA se encontrar material que não pode ser publicado:
 //   - segredos (JWT, chaves de API, connection strings com senha, AWS/GitHub);
 //   - arquivos .env;
@@ -81,7 +81,7 @@ function scanTree(root) {
 
 // ---- self-test: injeta cada categoria e exige detecção ----
 function selfTest() {
-  const base = join(tmpdir(), "oracle-pubscan-selftest");
+  const base = join(tmpdir(), "atlasxis-pubscan-selftest");
   if (existsSync(base)) rmSync(base, { recursive: true, force: true });
   mkdirSync(base, { recursive: true });
   // Canários MONTADOS por concatenação: em runtime cada string é um segredo

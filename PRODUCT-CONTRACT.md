@@ -1,9 +1,9 @@
-# PRODUCT-CONTRACT — ORÁCULO CORE v1
+# PRODUCT-CONTRACT — Atlasxis v1
 
 Este contrato define exatamente o que o produto promete e o que NÃO promete.
 É vinculante: qualquer afirmação fora dele é bug de comunicação.
 
-## O ORÁCULO É
+## O Atlasxis É
 
 - Um **Authorization Proof Engine**: prova, por sink, evidência estrutural de
   autorização.
@@ -14,7 +14,7 @@ Este contrato define exatamente o que o produto promete e o que NÃO promete.
 - **Abstenção explícita**: `INSUFFICIENT` / `NOT_ANALYZED` são resultados de
   primeira classe, não falhas.
 
-## O ORÁCULO NÃO
+## O Atlasxis NÃO
 
 - não substitui pentest;
 - não substitui revisão humana;

@@ -1,7 +1,7 @@
-// ORÁCULO CORE — validação pública sobre corpus sintético (public-corpus/).
+// Atlasxis — validação pública sobre corpus sintético (public-corpus/).
 // Substitui a validação externa do mantenedor (13 repos reais, não
 // redistribuíveis) por mini-projetos SINTÉTICOS, project-shaped, que exercitam
-// os mecanismos que o ORÁCULO afirma entender. Cada caso declara o veredito
+// os mecanismos que o Atlasxis afirma entender. Cada caso declara o veredito
 // esperado (ground truth por construção) e verificamos:
 //   - a decisão do engine bate com o esperado;
 //   - Proof Integrity = 0 em TODA decisão (invariante executável);

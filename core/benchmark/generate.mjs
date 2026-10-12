@@ -1,11 +1,11 @@
-// ORÁCULO CORE — gerador de benchmark (FASE 5).
+// Atlasxis — gerador de benchmark (FASE 5).
 // Ground truth por CONSTRUÇÃO: cada gerador sabe qual padrão montou (SAFE_PROVABLE,
 // SAFE_UNPROVABLE, VULNERABLE, OOS, UNSUPPORTED, AMBIGUOUS) e qual a decisão
-// esperada do ORÁCULO — NUNCA derivado do resultado do analyzer.
+// esperada do Atlasxis — NUNCA derivado do resultado do analyzer.
 //
 // Distinção central: `groundTruth` = verdade de segurança do código;
 // `expectedDecision` = o que um certificador conservador CORRETO deve emitir.
-// Um SAFE que o ORÁCULO não consegue provar tem groundTruth=SAFE mas
+// Um SAFE que o Atlasxis não consegue provar tem groundTruth=SAFE mas
 // expectedDecision=INSUFFICIENT (isso é CORRETO, não um erro — CORRETUDE>COBERTURA).
 
 let SEED = 1;

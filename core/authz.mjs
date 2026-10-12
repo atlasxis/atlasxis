@@ -1,4 +1,4 @@
-// ORÁCULO CORE — Authorization IR (REQUISITO 3).
+// Atlasxis — Authorization IR (REQUISITO 3).
 //
 // Condições de autorização viram AST booleana estruturada — nunca string.
 // Normalização lógica (NNF via De Morgan + eliminação de dupla negação +

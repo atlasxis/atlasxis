@@ -26,7 +26,7 @@
       "required": ["decision", "source", "justification"],
       "properties": {
         "decision": { "type": "string" },
-        "source": { "enum": ["human", "construction"], "$comment": "'oracle' é PROIBIDO — seria circular" },
+        "source": { "enum": ["human", "construction"], "$comment": "derivar do próprio motor é PROIBIDO — seria circular" },
         "justification": { "type": "string" }
       }
     },

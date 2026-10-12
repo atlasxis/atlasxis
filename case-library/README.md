@@ -1,7 +1,7 @@
 # Case Library — retroalimentação certificada (FASE H)
 
 Registro auditável de casos reais que sustentam (ou pedem) capacidades do
-ORÁCULO. É o **único** caminho pelo qual uma nova capacidade entra no core.
+Atlasxis. É o **único** caminho pelo qual uma nova capacidade entra no core.
 
 ## Estados
 
@@ -46,4 +46,4 @@ node case-library/validate.mjs
 
 O validador falha se: estado inválido, caso CERTIFIED sem os 10 requisitos,
 referências de fixture inexistentes, ou ground truth marcado como derivado do
-motor (`ground_truth_source: "oracle"` é proibido).
+motor (ground truth derivado do próprio motor é proibido).

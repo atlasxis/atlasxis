@@ -2,17 +2,17 @@
 
 Este diretório contém o corpus cego para a FASE 8. **Requer um auditor humano
 real.** Nenhuma resposta foi preenchida por máquina — fazê-lo seria fabricar
-validação, o oposto do que o ORÁCULO representa.
+validação, o oposto do que o Atlasxis representa.
 
 ## Arquivos
 
 - `blind-corpus.json` — 42 casos (2 por categoria, 21 categorias). Cada caso tem
   APENAS: `case_id`, `category`, `files` (código), `entry`, `sql`, `context`.
-  **Não contém** decisão do ORÁCULO, reason code, ProofChain nem expectativa.
+  **Não contém** decisão do Atlasxis, reason code, ProofChain nem expectativa.
 - `auditor-form.json` — formulário vazio para o auditor: `case_id`,
   `human_decision`, `human_reason`, `confidence`.
 - `SEALED-ground-truth.json` — gabarito por construção (NÃO é a decisão do
-  ORÁCULO). Não abrir antes da classificação humana.
+  Atlasxis). Não abrir antes da classificação humana.
 
 O protocolo completo e obrigatório está em **[PROCEDURE.md](PROCEDURE.md)**.
 
@@ -37,7 +37,7 @@ A pergunta NÃO é "o código é seguro em absoluto". É:
 
 ## Depois da classificação
 
-1. Rode `node compare.mjs` (compara humano × ORÁCULO × ground truth).
+1. Rode `node compare.mjs` (compara humano × Atlasxis × ground truth).
 2. Registre discordâncias SEM alterar o ground truth para coincidir com o motor.
 3. Atualize `docs/HUMAN-VALIDATION.md` com precisão/recall/false-control/abstention.
 

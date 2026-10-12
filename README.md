@@ -1,173 +1,200 @@
-# ORÁCULO — Authorization Proof Engine
+# Atlasxis — Authorization Proof Engine
 
-O ORÁCULO analisa estaticamente rotas de API (Next.js/Supabase) e responde, **por
-sink de dados**, uma única pergunta com três respostas possíveis:
+[Português](README.pt-BR.md)
 
-> **"Existe evidência estrutural suficiente para provar autorização neste caminho?"**
+Atlasxis statically analyzes API routes (Next.js + Supabase) and answers one
+question **per data sink**, with three possible outcomes:
 
-- **`CONTROLLED`** — evidência suficiente de autorização (cadeia de prova completa);
-- **`VULNERABLE`** — evidência positiva de caminho alcançável sem autorização;
-- **`INSUFFICIENT_EVIDENCE` / `NOT_ANALYZED` / `OUT_OF_SCOPE_*`** — não foi possível provar.
+> **"Is there enough structural evidence to prove authorization on this path?"**
 
-## O que ele NÃO é
+- **`CONTROLLED`** — enough evidence of authorization (complete proof chain);
+- **`VULNERABLE`** — positive evidence of a reachable path with no authorization;
+- **`INSUFFICIENT_EVIDENCE` / `NOT_ANALYZED` / `OUT_OF_SCOPE_*`** — it could not prove either.
 
-- **Não** é um scanner de vulnerabilidades genérico (XSS, SQLi, secrets, deps).
-- **Não** afirma, nunca, "seu sistema está seguro". Ausência de finding não é prova de segurança.
-- **Não** converte falta de evidência em veredito: quando não consegue provar, ele **abstém** e diz o porquê.
-- **Não** executa o código analisado — a análise é 100 % estática.
+## Why it exists
 
-Esse contrato (CORRETUDE > COBERTURA) está formalizado em [PRODUCT-CONTRACT.md](PRODUCT-CONTRACT.md).
+Broken object-level authorization (IDOR/BOLA) is the top API security risk,
+and it is the hardest to catch with pattern-based scanners: the bug is a
+*missing* check, not a malicious construct. Checking that a Supabase table
+*has* Row Level Security is not the same as checking that the policy actually
+restricts rows to their owner. Atlasxis tries to **prove** the authorization
+chain, and refuses to guess when it can't.
 
-## Instalação
+## What it is NOT
 
-Requer Node ≥ 20.
+- **Not** a generic vulnerability scanner (XSS, SQLi, secrets, dependencies).
+- It **never** says "your app is secure". No findings is not proof of security.
+- It **never** turns missing evidence into a verdict: when it can't prove, it
+  **abstains** and tells you why.
+- It **never** runs the code it analyzes. The analysis is 100% static.
+
+This contract (CORRECTNESS > COVERAGE) is formalized in
+[PRODUCT-CONTRACT.md](PRODUCT-CONTRACT.md).
+
+## Install
+
+Requires Node ≥ 20.
 
 ```bash
-git clone <repo> && cd oracle-core
+npm install --save-dev atlasxis
+```
+
+Or run it once without installing:
+
+```bash
+npx atlasxis scan .
+```
+
+## Usage
+
+```bash
+npx atlasxis scan .                        # markdown report
+npx atlasxis scan . --format json          # machine-readable
+npx atlasxis scan . --format sarif         # for code-scanning tools
+npx atlasxis scan . --ci                   # CI policy (exit 2 if VULNERABLE)
+npx atlasxis report . --out proof.md       # per-sink proof report (file + line)
+npx atlasxis explain INSUFFICIENT_RLS_UNKNOWN
+npx atlasxis version
+```
+
+With RLS evidence from your migrations:
+
+```bash
+npx atlasxis scan . --rls ./supabase/migrations
+```
+
+## Example output
+
+Run it against one of the synthetic fixtures in this repository:
+
+```bash
+git clone https://github.com/fisioterapeutah-star/atlasxis.git && cd atlasxis
 npm install
-npm test        # gates públicos reprodutíveis
-```
-
-## Quick start
-
-```bash
-npx oracle scan ./meu-projeto                 # relatório markdown
-npx oracle scan ./meu-projeto --format json   # machine-readable
-npx oracle scan ./meu-projeto --ci            # política de CI (exit 2 se VULNERABLE)
-npx oracle report ./meu-projeto --out proof.md # Proof Report por sink (arquivo+linha)
-npx oracle explain INSUFFICIENT_RLS_UNKNOWN   # o que um reason code significa
-npx oracle version
-```
-
-Com evidência RLS: `npx oracle scan ./meu-projeto --rls ./meu-projeto/supabase/migrations`.
-
-## Exemplo de saída
-
-Rode contra uma das fixtures sintéticas do repositório:
-
-```bash
-npx oracle report public-corpus/service-role-vuln
+npx atlasxis report public-corpus/service-role-vuln
 ```
 
 ```
 ### VULNERABLE — `DELETE public-corpus/service-role-vuln/src/app/api/notes/[id]/route.ts`
-- Sink: delete `notes` (cliente: service_role)
+- Sink: delete `notes` (client: service_role)
 - Reason code: VULNERABLE_NO_GATING_SERVICE_ROLE
 - ProofChain:
-    SOURCE        id                      (controlável pelo cliente)
+    SOURCE        id                      (client-controlled)
     RESOURCE      notes id=id
-    GUARD         (nenhum guard vivo encontrado)
+    GUARD         (no live guard found)
     IDENTITY      same=false
-    SINK          delete notes            (service_role — bypassa RLS)
+    SINK          delete notes            (service_role — bypasses RLS)
 ```
 
-Cada decisão carrega um **reason code estável** e, quando há prova, uma
-**ProofChain**: fonte → recurso → autorização → guard → identidade → sink, com
-testemunhas estruturais e assumptions explícitas. `VULNERABLE` exige evidência
-**positiva** (entrada controlável + sink alcançável + ausência comprovada de
-gating); nunca é declarado só porque "não achou ownership".
+Every decision carries a **stable reason code** and, when there is proof, a
+**ProofChain**: source → resource → authorization → guard → identity → sink,
+with structural witnesses and explicit assumptions. `VULNERABLE` requires
+**positive** evidence (controllable input + reachable sink + proven absence of
+any gating). It is never emitted just because "no ownership check was found".
 
-## Como ler os vereditos
+> The report text is currently in Portuguese. Reason codes, JSON and SARIF
+> output are language-neutral.
 
-| Veredito | Significa | NÃO significa |
+## Reading the verdicts
+
+| Verdict | Means | Does NOT mean |
 |---|---|---|
-| `CONTROLLED` | ProofChain íntegra: há evidência estrutural de autorização para este caminho | que o resto do sistema é seguro |
-| `VULNERABLE` | evidência **positiva** de acesso não autorizado alcançável | (só é emitido com prova positiva, nunca por ausência) |
-| `INSUFFICIENT_EVIDENCE` | não foi possível provar nem autorização nem vulnerabilidade | **NÃO é `SAFE`** — precisa de revisão humana |
-| `NOT_ANALYZED` | fora do que o motor modela (sintaxe/framework/sink não suportado) | **NÃO é `SAFE`** — precisa de revisão humana |
-| `OUT_OF_SCOPE_PROVEN` | rota provadamente admin/webhook: o modelo de posse não se aplica | que a operação de admin é desejável (é política, não prova) |
+| `CONTROLLED` | Intact ProofChain: structural evidence of authorization for this path | that the rest of the system is secure |
+| `VULNERABLE` | **positive** evidence of reachable unauthorized access | (only emitted with positive proof, never from absence) |
+| `INSUFFICIENT_EVIDENCE` | could not prove authorization nor vulnerability | **NOT `SAFE`** — needs human review |
+| `NOT_ANALYZED` | outside what the engine models (syntax/framework/sink) | **NOT `SAFE`** — needs human review |
+| `OUT_OF_SCOPE_PROVEN` | route proven admin-only or webhook: the ownership model does not apply | that the admin operation is desirable (policy, not proof) |
 
-`oracle explain <REASON_CODE>` detalha qualquer um dos 35 reason codes: o que
-prova e o que **não** prova. **Ausência de prova não é prova de ausência.**
+`atlasxis explain <REASON_CODE>` details any of the 35 reason codes: what it
+proves and what it does **not** prove. **Absence of proof is not proof of absence.**
 
-## Como criar uma fixture
+## CI
 
-```bash
-# 1. um mini-projeto sintético (domínio genérico, sem lógica de negócio real)
-mkdir -p minha-fixture/src/app/api/coisa
-$EDITOR minha-fixture/src/app/api/coisa/route.ts
-# 2. veja o veredito e a prova
-npx oracle scan minha-fixture --format json
-npx oracle report minha-fixture
+The simplest setup is the npm package:
+
+```yaml
+# .github/workflows/atlasxis.yml
+name: atlasxis
+on: [pull_request]
+jobs:
+  authz:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npx --yes atlasxis scan . --ci
 ```
 
-Os exemplos em [`public-corpus/`](public-corpus/) cobrem cada mecanismo
-suportado. Ver [CONTRIBUTING.md](CONTRIBUTING.md) para submeter casos.
+Explicit policy: **only `VULNERABLE` fails the build** (use `--fail-on
+insufficient` to make it stricter). `INSUFFICIENT` and `NOT_ANALYZED` are
+**never** treated as safe; they are always reported.
 
-## Limitações (leia antes de confiar)
+A composite action is also available in
+[.github/actions/atlasxis-scan](.github/actions/atlasxis-scan).
 
-Escopo atual: Next.js App/Pages Router + Supabase (JS client), RLS via corpus
-SQL de migrações. Fora disso → `NOT_ANALYZED`, jamais um veredito. A lista
-completa e honesta está em [docs/LIMITATIONS.md](docs/LIMITATIONS.md).
-**Validação humana independente: PENDING** — ver [docs/HUMAN-VALIDATION.md](docs/HUMAN-VALIDATION.md).
+## Limitations (read before trusting it)
 
-## Validação (corpus público)
+Current scope: Next.js App/Pages Router **API routes** + Supabase JS client,
+with RLS read from SQL migrations. Server actions, client-side Supabase calls,
+Prisma/Drizzle and other frameworks are outside the model and come out as
+`NOT_ANALYZED` or are not discovered at all — never as a verdict. The full,
+honest list is in [docs/LIMITATIONS.md](docs/LIMITATIONS.md) (Portuguese).
+**Independent human validation: PENDING.**
 
-Todos os números abaixo são reproduzíveis com `npm test` neste repositório e
-derivam **exclusivamente do corpus público**. Detalhes em
-[docs/PUBLIC-METRICS.md](docs/PUBLIC-METRICS.md).
+## Validation (public corpus)
 
-- **532 casos** sintéticos rotulados por construção: 0 false-control, 0 false-vuln ([docs/BENCHMARK-REPORT.md](docs/BENCHMARK-REPORT.md));
-- **Mutation testing** sobre fixtures CONTROLLED: 0 survivors ([docs/MUTATION-REPORT.md](docs/MUTATION-REPORT.md));
-- **17 padrões adversariais** projetados para induzir falso CONTROLLED — abstenção correta em todos;
-- **8 mini-projetos sintéticos** ([`public-corpus/`](public-corpus/)) que demonstram cada mecanismo, com Proof Integrity = 0;
-- **Corpus cego** de 42 casos aguardando auditor humano ([blind-validation/](blind-validation/)).
+Every number below is reproducible with `npm test` in this repository and comes
+**only from the public corpus**. Details in [docs/PUBLIC-METRICS.md](docs/PUBLIC-METRICS.md).
 
-> **Honestidade metodológica**: os recalls valem *no corpus sintético que este
-> repositório contém* — medem se o motor prova o que o corpus contém, não o que
-> existe no mundo real. **Não há métrica de recall do mundo real nesta
-> distribuição pública** (exigiria ground truth sobre código real, não
-> redistribuível). Validação humana independente: **PENDING**.
+- **532 synthetic cases** labeled by construction: 0 false-control, 0 false-vuln;
+- **Mutation testing** on CONTROLLED fixtures: 0 survivors;
+- **17 adversarial patterns** designed to trick it into a false `CONTROLLED`: correct abstention on all;
+- **8 synthetic mini-projects** ([`public-corpus/`](public-corpus/)) demonstrating each mechanism, Proof Integrity = 0;
+- **Blind corpus** of 42 cases waiting for a human auditor ([blind-validation/](blind-validation/)).
 
-## Modelo de confiança
+> **Methodological honesty**: these recall numbers hold *on the synthetic
+> corpus in this repository*. They measure whether the engine proves what the
+> corpus contains, not what exists in the real world. **There is no real-world
+> recall metric in this public distribution.**
 
-- O ORÁCULO **prova** propriedades estruturais; ele não executa o código nem
-  observa runtime. Uma prova `CONTROLLED` é tão boa quanto suas *assumptions*
-  (listadas em cada finding e em `oracle explain`).
-- A política de **false-control = 0** é o eixo do produto: preferimos abster
-  (`INSUFFICIENT`) a arriscar um `CONTROLLED` incorreto. Por isso a cobertura é
-  deliberadamente conservadora.
-- **VULNERABLE** exige evidência positiva; nunca é inferido de ausência.
-- Uma capacidade nova só entra no motor pelo processo de certificação de 10
-  requisitos (ver abaixo) — nunca por heurística ad-hoc ou "aprendizado" automático.
+## Trust model
 
-## Segurança operacional
+- Atlasxis **proves** structural properties. It does not run code or observe
+  runtime. A `CONTROLLED` proof is only as good as its *assumptions*, which are
+  listed in every finding and in `atlasxis explain`.
+- **False-control = 0** is the core of the product: it would rather abstain
+  than risk a wrong `CONTROLLED`. Coverage is deliberately conservative.
+- **`VULNERABLE` requires positive evidence**; it is never inferred from absence.
+- New capabilities only enter the engine through a 10-requirement
+  certification process, never through ad-hoc heuristics or automatic "learning".
 
-Analisar código de terceiros é tratado como operação hostil: symlinks não são
-seguidos, lifecycle scripts do alvo nunca rodam, `.env` do alvo nunca é lido,
-limites de arquivos/bytes/tempo são impostos e a saída é sanitizada contra
-vazamento de segredos. Ver [SECURITY.md](SECURITY.md) e
-[docs/THREAT-MODEL.md](docs/THREAT-MODEL.md); verificado pelo gate 8 do CI
-(`core/harness/operational-security.mjs`).
+## Operational security
 
-## Arquitetura
+Analyzing third-party code is treated as hostile: symlinks are not followed,
+the target's lifecycle scripts never run, the target's `.env` is never read,
+file/byte/time limits are enforced, and output is sanitized against secret
+leaks. See [SECURITY.md](SECURITY.md) and [docs/THREAT-MODEL.md](docs/THREAT-MODEL.md).
 
-Security IR → extração estrutural (TypeScript AST) → provas por mecanismo
-(ownership helper/inline, post-read gate, transitivo, RLS, role-gate, webhook)
-→ decisão por sink `(status, reasonCode)` → relatórios (markdown/JSON/SARIF).
-Ver [ARCHITECTURE.md](ARCHITECTURE.md) e [docs/CORE-IR.md](docs/CORE-IR.md).
+## Architecture
 
-## CI / GitHub Action
+Security IR → structural extraction (TypeScript AST) → per-mechanism proofs
+(ownership helper/inline, post-read gate, transitive, RLS, role gate, webhook)
+→ per-sink decision `(status, reasonCode)` → reports (markdown/JSON/SARIF).
+See [ARCHITECTURE.md](ARCHITECTURE.md).
 
-Action oficial em [.github/actions/oracle-scan](.github/actions/oracle-scan);
-workflow de exemplo em [.github/workflows/oracle.yml](.github/workflows/oracle.yml).
-Política explícita: **só `VULNERABLE` falha o build** (endurecível com
-`fail-on: insufficient`). `INSUFFICIENT` e `NOT_ANALYZED` **nunca** são tratados
-como SAFE — são sempre reportados.
+## Contributing
 
-## Contribuição
+Report cases with **minimal synthetic code** (never private or third-party
+code) using the issue templates. New capabilities follow the certification
+process in [case-library/README.md](case-library/README.md). See
+[CONTRIBUTING.md](CONTRIBUTING.md). Run `npm test` before opening a PR.
 
-Novas capacidades só entram no core pelo processo de certificação da Case
-Library (caso real → ground truth → fixtures positiva/negativa/adversarial →
-regressão → mutation → benchmark → validação externa → sem aumento de
-false-control). Ver [case-library/README.md](case-library/README.md).
+## License
 
-## Licença
+[MIT](LICENSE). It covers the engine, the CLI, the documentation and the
+synthetic fixtures in `public-corpus/`. No third-party code is redistributed.
 
-[MIT](LICENSE). A licença cobre o engine, a CLI, a documentação e as fixtures
-sintéticas de `public-corpus/` — nenhum código de terceiros é redistribuído.
-
----
-
-Mudanças e o que foi removido/substituído por privacidade na distribuição
-pública: ver [CHANGELOG.md](CHANGELOG.md).
+Changes, and what was removed or replaced for privacy in the public
+distribution: [CHANGELOG.md](CHANGELOG.md). Atlasxis was previously published
+as ORÁCULO CORE.

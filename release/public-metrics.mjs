@@ -38,7 +38,7 @@ const opsOut = run(["operational-security.mjs"], join(root, "core/harness"));
 const opsM = opsOut.match(/pass=(\d+) fail=(\d+)/) || [];
 
 const L = [];
-L.push("# ORÁCULO — Métricas públicas (corpus público apenas)", "");
+L.push("# Atlasxis — Métricas públicas (corpus público apenas)", "");
 L.push("_Gerado por `node release/public-metrics.mjs`. Fontes: benchmark sintético, mutation, corpus público sintético. **Nenhum número vem de corpora privados ou de terceiros.** Cada métrica declara seu ground truth._", "");
 L.push("| Métrica | Valor | Ground truth |", "|---|---|---|");
 L.push(`| Correção (benchmark sintético) | ${bench.total - bench.mismatches}/${bench.total} | ${bench.total} casos rotulados **por construção** (21 categorias) |`);

@@ -1,4 +1,4 @@
-# ORÁCULO CORE — Security IR (FASE 3) — documentação técnica
+# Atlasxis — Security IR (FASE 3) — documentação técnica
 
 Implementado em 2026-08-20. O CORE novo vive em `core/` e é comparado
 diferencialmente contra o analyzer6 congelado (que permanece byte-idêntico —

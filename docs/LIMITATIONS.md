@@ -1,4 +1,4 @@
-# LIMITATIONS — o que o ORÁCULO CORE v1 NÃO prova (reportado explicitamente)
+# LIMITATIONS — o que o Atlasxis v1 NÃO prova (reportado explicitamente)
 
 Correção > cobertura. Estas são fronteiras conhecidas onde o motor abstém em vez
 de arriscar um false-control. Nenhuma é escondida.

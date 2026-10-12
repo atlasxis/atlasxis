@@ -1,4 +1,4 @@
-// ORÁCULO CORE — mutation testing (FASE 6).
+// Atlasxis — mutation testing (FASE 6).
 // Parte de casos CONTROLLED e aplica mutações que REMOVEM a causa da
 // autorização. Cada mutação que remove a causa NÃO pode continuar CONTROLLED.
 // Um survivor (mutante que ainda dá CONTROLLED) é reportado, nunca mascarado.

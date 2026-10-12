@@ -16,7 +16,7 @@ NÃO é pedido para "assumir" autorização: só para provar o que é provável.
 ```ts
 ```
 
-## O que o ORÁCULO disse
+## O que o Atlasxis disse
 - Decisão: `INSUFFICIENT_EVIDENCE` / `NOT_ANALYZED`
 - Reason code:
 

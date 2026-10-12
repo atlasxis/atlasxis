@@ -25,5 +25,5 @@ $ node core/cli.mjs scan <path> --format json
 ## Esperado vs. obtido
 <!-- Para não-determinismo, cole as duas saídas. -->
 
-<!-- Vulnerabilidades de SEGURANÇA no próprio ORÁCULO: NÃO abra issue pública.
+<!-- Vulnerabilidades de SEGURANÇA no próprio Atlasxis: NÃO abra issue pública.
 Siga SECURITY.md (divulgação responsável). -->

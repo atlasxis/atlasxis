@@ -1,4 +1,4 @@
-# ORÁCULO CORE — plano de arquitetura (baseado no código real, 2026-08-20)
+# Atlasxis — plano de arquitetura (baseado no código real, 2026-08-20)
 
 Este documento cumpre a primeira tarefa da diretiva: mapear o que existe, apontar
 exatamente onde o analyzer6 precisa ser substituído por IR/grafo de prova, e definir
@@ -73,7 +73,7 @@ resultado (o baseline está limpo), são dívidas estruturais:
 
 ## 4. FASE 3 — o menor caminho seguro para o IR
 
-Regra de transição: **o analyzer6 congelado vira oráculo-de-referência**. O CORE
+Regra de transição: **o analyzer6 congelado vira Atlasxis-de-referência**. O CORE
 novo só é aceito quando o harness diferencial mostrar, nos três corpora (fixtures,
 projeto-auditado-privado, corpus-externo), veredito idêntico OU divergência justificada por prova auditada
 — nunca um CONTROLLED novo sem proof trace completo.

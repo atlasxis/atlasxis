@@ -1,4 +1,4 @@
-# ORÁCULO — Métricas públicas (corpus público apenas)
+# Atlasxis — Métricas públicas (corpus público apenas)
 
 _Gerado por `node release/public-metrics.mjs`. Fontes: benchmark sintético, mutation, corpus público sintético. **Nenhum número vem de corpora privados ou de terceiros.** Cada métrica declara seu ground truth._
 

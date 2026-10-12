@@ -1,4 +1,4 @@
-name: "ORÁCULO Authorization Proof Scan"
+name: "Atlasxis Authorization Proof Scan"
 description: >
   Analisa estaticamente as rotas do projeto e certifica evidência de autorização
   por sink. Política explícita: falha SOMENTE com VULNERABLE comprovado (ou, com
@@ -17,10 +17,6 @@ inputs:
     description: "Política de falha: 'vulnerable' (padrão) ou 'insufficient' (endurecida)"
     required: false
     default: "vulnerable"
-  oracle-ref:
-    description: "Repositório/ref do oracle-core a usar (ex.: owner/oracle-core-v1@v1.0.0)"
-    required: false
-    default: ""
 outputs:
   report:
     description: "Caminho do relatório JSON gerado"
@@ -32,30 +28,30 @@ runs:
       shell: bash
       run: |
         set -euo pipefail
-        ORACLE_DIR="$(cd "${{ github.action_path }}/../../.." && pwd)"
-        if [ ! -d "$ORACLE_DIR/node_modules/typescript" ]; then
-          npm install --prefix "$ORACLE_DIR" --ignore-scripts --no-audit --no-fund
+        ENGINE_DIR="$(cd "${{ github.action_path }}/../../.." && pwd)"
+        if [ ! -d "$ENGINE_DIR/node_modules/typescript" ]; then
+          npm install --prefix "$ENGINE_DIR" --ignore-scripts --no-audit --no-fund
         fi
-    - name: Executar ORÁCULO
+    - name: Executar Atlasxis
       id: scan
       shell: bash
       run: |
         set -uo pipefail
-        ORACLE_DIR="$(cd "${{ github.action_path }}/../../.." && pwd)"
+        ENGINE_DIR="$(cd "${{ github.action_path }}/../../.." && pwd)"
         ARGS=( "${{ inputs.path }}" --ci )
         if [ -n "${{ inputs.rls }}" ]; then ARGS+=( --rls "${{ inputs.rls }}" ); fi
         if [ "${{ inputs['fail-on'] }}" = "insufficient" ]; then ARGS+=( --fail-on insufficient ); fi
-        node "$ORACLE_DIR/core/cli.mjs" scan "${ARGS[@]}" > oracle-report.json
+        node "$ENGINE_DIR/core/cli.mjs" scan "${ARGS[@]}" > atlasxis-report.json
         rc=$?
-        echo "report=oracle-report.json" >> "$GITHUB_OUTPUT"
-        node "$ORACLE_DIR/core/cli.mjs" report "${{ inputs.path }}" --out oracle-proof-report.md || true
+        echo "report=atlasxis-report.json" >> "$GITHUB_OUTPUT"
+        node "$ENGINE_DIR/core/cli.mjs" report "${{ inputs.path }}" --out atlasxis-proof-report.md || true
         {
-          echo "## ORÁCULO — Authorization Proof Scan"
+          echo "## Atlasxis — Authorization Proof Scan"
           echo ""
           echo "> Este resultado afirma somente: caminhos provados controlados, caminhos provados vulneráveis, e o que não foi possível provar. Ele nunca afirma que o sistema está seguro."
           echo ""
           echo '```'
-          node -e "const r=require('./oracle-report.json'); console.log(JSON.stringify(r.summary,null,1)); console.log('total de sinks:', r.totalSinks);"
+          node -e "const r=require('./atlasxis-report.json'); console.log(JSON.stringify(r.summary,null,1)); console.log('total de sinks:', r.totalSinks);"
           echo '```'
         } >> "$GITHUB_STEP_SUMMARY"
         exit $rc
