@@ -1,0 +1,49 @@
+{
+  "id": "owner-overridable-spread",
+  "title": "Spread de dados junto com o dono (correção de falso CONTROLLED da 1.0.3)",
+  "status": "CERTIFIED",
+  "origin": {
+    "project": "validação externa: 7 repositórios públicos de terceiros com server actions + Supabase (não nomeados aqui; registro no repositório do mantenedor)",
+    "location": "core/engine.mjs + core/extract.mjs",
+    "date": "2026-10-12"
+  },
+  "mechanism": "insert/update com { user_id: user.id, ...dados }: colunas desconhecidas podem sobrescrever o dono",
+  "oracle_result": {
+    "status": "INSUFFICIENT_EVIDENCE",
+    "reasonCode": "INSUFFICIENT_OWNER_OVERRIDABLE"
+  },
+  "ground_truth": {
+    "decision": "em JavaScript a propriedade posterior sobrescreve a anterior; tipos TypeScript não existem em runtime; o cliente pode enviar user_id",
+    "source": "construction",
+    "justification": "em JavaScript a propriedade posterior sobrescreve a anterior; tipos TypeScript não existem em runtime; o cliente pode enviar user_id"
+  },
+  "evidence": "Na 1.0.3 saía CONTROLLED_SELF_SCOPE. Achado em código real (insert e update com spread de argumento).",
+  "code_ref": "core/engine.mjs",
+  "fixtures": {
+    "positive": [
+      "core/fixtures/server-actions.mjs"
+    ],
+    "negative": [
+      "core/fixtures/server-actions.mjs"
+    ],
+    "adversarial": [
+      "core/harness/adversarial-repo.mjs",
+      "core/fixtures/server-actions.mjs"
+    ]
+  },
+  "regression": "core/harness/adversarial-repo.mjs (padrão 27) + core/fixtures/server-actions.mjs (SA10)",
+  "certification": {
+    "real_case": true,
+    "ground_truth": true,
+    "fixture_positive": true,
+    "fixture_negative": true,
+    "fixture_adversarial": true,
+    "regression_pass": true,
+    "mutation_pass": true,
+    "benchmark_pass": true,
+    "external_pass": true,
+    "no_false_control_increase": true
+  },
+  "human_validation": "Revisão manual pelo mantenedor no código real; auditoria cega independente PENDING.",
+  "notes": "Grave colunas explícitas para que a prova seja possível."
+}

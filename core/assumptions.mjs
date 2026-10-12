@@ -50,7 +50,19 @@ export const ASSUMPTION = Object.freeze({
   },
   SUPABASE_DEFAULT_GRANTS: {
     id: "SUPABASE_DEFAULT_GRANTS",
-    text: "OPT-IN explícito: os grants default do Supabase dão acesso total ao role authenticated quando RLS está desabilitada; grants customizados não foram analisados",
+    text: "OPT-IN explícito: o projeto usa os grants padrão antigos do Supabase (select/insert/update/delete para anon e authenticated nas tabelas do schema public). O Supabase desligou esse padrão para projetos novos em 30/05/2026 e para tabelas novas de projetos existentes em 30/10/2026; tabelas antigas mantêm os grants",
+  },
+  SERVER_ACTION_IS_PUBLIC_ENDPOINT: {
+    id: "SERVER_ACTION_IS_PUBLIC_ENDPOINT",
+    text: "toda função async exportada de um arquivo \"use server\" pode ser chamada por qualquer cliente, com quaisquer argumentos (o Next.js orienta tratar server actions como endpoints públicos)",
+  },
+  RLS_CORPUS_COMPLETE: {
+    id: "RLS_CORPUS_COMPLETE",
+    text: "o SQL analisado (migrações) reflete o banco de produção; RLS, policies ou grants alterados fora dele (por exemplo, pelo dashboard) não foram vistos",
+  },
+  SCHEMA_DUMP_IS_PRODUCTION: {
+    id: "SCHEMA_DUMP_IS_PRODUCTION",
+    text: "o arquivo indicado em --schema-dump é um dump completo e atual do schema de produção, com privilégios (pg_dump sem -x / supabase db dump)",
   },
   SHARED_SECRET_VERIFIES_CALLER: {
     id: "SHARED_SECRET_VERIFIES_CALLER",

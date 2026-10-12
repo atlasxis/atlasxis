@@ -1,9 +1,10 @@
 #!/usr/bin/env node
-// Atlasxis — CLI de produto (v1.0.0).
+// Atlasxis — CLI de produto.
 //
 // Comandos:
 //   atlasxis scan <path> [--format json|markdown|sarif] [--rls <dir>] [--ci]
 //   atlasxis report <path> [--rls <dir>] [--out <file>]
+//   atlasxis rls <path> [--rls <dir> | --schema-dump <arquivo.sql>] [--assume-default-grants] [--format ...] [--ci]
 //   atlasxis explain <REASON_CODE>
 //   atlasxis baseline <path>
 //   atlasxis diff <baseline.json> <path>
@@ -28,9 +29,12 @@ import { readFileSync, readdirSync, lstatSync, writeFileSync, existsSync, statSy
 import { join, relative, resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { analyzeFileIR } from "./engine.mjs";
+import { isServerActionFile } from "./extract.mjs";
 import { parseSqlCorpus } from "./rls.mjs";
 import { buildReport, toJSON, toMarkdown, toSARIF } from "./report.mjs";
 import { EXPLANATIONS } from "./explanations.mjs";
+import { auditTables } from "./rls-audit.mjs";
+import { rlsToJSON, rlsToMarkdown, rlsToSARIF } from "./rls-report.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PKG = JSON.parse(readFileSync(join(__dirname, "..", "package.json"), "utf8"));
@@ -81,7 +85,10 @@ function loadProject(root, state) {
     try { files[rel] = readFileSync(p, "utf8"); } catch {}
   }
   const routes = Object.keys(files).filter((p) => /(^|\/)app\/api\/.*route\.(ts|tsx)$/.test(p) || /(^|\/)src\/app\/api\/.*route\.(ts|tsx)$/.test(p) || /(^|\/)pages\/api\/.*\.(ts|tsx)$/.test(p));
-  return { files, routes };
+  // server actions: arquivos cuja primeira instrução é "use server"
+  const routeSet = new Set(routes);
+  const actions = Object.keys(files).filter((p) => !routeSet.has(p) && isServerActionFile(files[p]));
+  return { files, routes, actions };
 }
 
 function loadRls(root, rlsDir, state) {
@@ -97,17 +104,21 @@ function loadRls(root, rlsDir, state) {
 function analyzeProject(root, opts) {
   const state = newWalkState();
   const deadline = Date.now() + (opts.timeoutMs || LIMITS.timeoutMs);
-  const { files, routes } = loadProject(root, state);
+  const { files, routes, actions } = loadProject(root, state);
   const rls = loadRls(root, opts.rls, state);
   const out = [];
-  for (const rp of routes.sort()) {
-    if (Date.now() > deadline) throw new LimitError(`timeout de análise excedido (${opts.timeoutMs || LIMITS.timeoutMs}ms) após ${out.length}/${routes.length} rotas`);
+  // server actions: certificadas (validação externa em 7 repositórios reais).
+  // Ligadas por padrão; --no-server-actions desliga.
+  const actionUnits = opts.serverActions !== false ? actions.sort().map((p) => [p, { kind: "action" }]) : [];
+  const units = [...routes.sort().map((p) => [p, {}]), ...actionUnits];
+  for (const [rp, mode] of units) {
+    if (Date.now() > deadline) throw new LimitError(`timeout de análise excedido (${opts.timeoutMs || LIMITS.timeoutMs}ms) após ${out.length}/${units.length} arquivos`);
     let handlers;
-    try { handlers = analyzeFileIR(files, rp, rls); }
+    try { handlers = analyzeFileIR(files, rp, rls, mode); }
     catch (e) { handlers = [{ method: "?", client: "unknown", sinkDecisions: [], decision: { status: "NOT_ANALYZED", reasonCode: "NOT_ANALYZED_PARSE_ERROR", assumptions: [], unknowns: [String(e.message).slice(0, 100)] } }]; }
     out.push({ path: rp, handlers });
   }
-  return { files, routes, rls, analyzed: out, state };
+  return { files, routes, actions: opts.serverActions !== false ? actions : [], actionsFound: actions.length, rls, analyzed: out, state };
 }
 
 // ---------------- sanitização de saída ----------------
@@ -144,14 +155,15 @@ function lineOf(content, pos) {
 // ---------------- comandos ----------------
 function cmdScan(rootArg, opts) {
   const root = resolveRoot(rootArg);
-  const { analyzed, routes, rls, state } = analyzeProject(root, opts);
+  const { analyzed, routes, actions, actionsFound, rls, state } = analyzeProject(root, opts);
   const report = buildReport(analyzed);
   report.meta = {
     engine: `atlasxis ${PKG.version}`, root: relative(process.cwd(), root) || ".",
-    routes: routes.length, rlsModel: !!rls.model,
+    routes: routes.length, serverActionFiles: actions.length, rlsModel: !!rls.model,
+    ...(actionsFound && opts.serverActions === false ? { serverActionsSkipped: `${actionsFound} arquivo(s) "use server" encontrados e NÃO analisados (--no-server-actions)` } : {}),
     filesRead: state.files, symlinksSkipped: state.symlinksSkipped, oversizedSkipped: state.oversizedSkipped,
   };
-  if (routes.length === 0) report.meta.note = "0 rotas descobertas — nenhum handler no escopo de descoberta (app/api/**/route.ts[x], src/app/api/**, pages/api/**)";
+  if (routes.length === 0 && actions.length === 0) report.meta.note = "0 rotas e 0 arquivos de server actions descobertos — nenhum handler no escopo de descoberta (app/api/**/route.ts[x], src/app/api/**, pages/api/**, arquivos \"use server\")";
   const fmt = opts.ci ? "json" : (opts.format || "markdown");
   emit(fmt === "json" ? toJSON(report) : fmt === "sarif" ? toSARIF(report) : toMarkdown(report));
   emit("\n");
@@ -167,12 +179,13 @@ function cmdScan(rootArg, opts) {
 
 function cmdReport(rootArg, opts) {
   const root = resolveRoot(rootArg);
-  const { files, analyzed, routes, rls, state } = analyzeProject(root, opts);
+  const { files, analyzed, routes, actions, actionsFound, rls, state } = analyzeProject(root, opts);
   const L = [];
   L.push("# Atlasxis — Proof Report por sink", "");
   L.push(`Engine: atlasxis ${PKG.version} — análise estática; nenhum código do projeto foi executado.`, "");
   L.push("> Este relatório afirma somente: (a) caminhos com evidência suficiente de autorização; (b) caminhos com evidência suficiente de vulnerabilidade; (c) o que não foi possível provar. Ele NUNCA afirma \"o sistema está seguro\".", "");
-  L.push(`Rotas descobertas: ${routes.length} · arquivos lidos: ${state.files} · symlinks ignorados: ${state.symlinksSkipped} · RLS corpus: ${rls.model ? "sim" : "não"}`, "");
+  L.push(`Rotas descobertas: ${routes.length} · arquivos de server actions: ${actions.length} · arquivos lidos: ${state.files} · symlinks ignorados: ${state.symlinksSkipped} · RLS corpus: ${rls.model ? "sim" : "não"}`, "");
+  if (actionsFound && opts.serverActions === false) L.push(`> ${actionsFound} arquivo(s) "use server" encontrados e NÃO analisados (--no-server-actions). Não analisado NÃO significa seguro.`, "");
   const order = ["VULNERABLE", "CONTROLLED", "INSUFFICIENT_EVIDENCE", "OUT_OF_SCOPE_UNVERIFIED", "OUT_OF_SCOPE_PROVEN", "NOT_ANALYZED"];
   const buckets = Object.fromEntries(order.map((k) => [k, []]));
   for (const f of analyzed) for (const h of f.handlers) {
@@ -271,6 +284,43 @@ function cmdDiff(baselinePath, rootArg, opts) {
   } else emit("sem regressões de autorização\n");
 }
 
+// Auditoria de RLS por tabela: lê o SQL (migrações ou dump de produção) e
+// decide, por tabela × papel × operação, sem depender de rotas de API.
+function cmdRls(rootArg, opts) {
+  const root = resolveRoot(rootArg);
+  const state = newWalkState();
+  let model, source;
+  if (opts.schemaDump) {
+    const f = resolve(opts.schemaDump);
+    let st; try { st = lstatSync(f); } catch { process.stderr.write(`erro: dump inexistente: ${f}\n`); process.exit(3); }
+    if (!st.isFile()) { process.stderr.write(`erro: dump não é arquivo: ${f}\n`); process.exit(3); }
+    if (st.size > LIMITS.maxTotalBytes) throw new LimitError(`dump maior que o limite (${LIMITS.maxTotalBytes} bytes)`);
+    model = parseSqlCorpus({ [relative(root, f) || f]: readFileSync(f, "utf8") });
+    source = "dump de schema (--schema-dump)";
+    if (!model.dumpHeader) process.stderr.write("aviso: o arquivo não tem cabeçalho de pg_dump; ele será tratado como dump completo de produção por declaração sua\n");
+    if (model.grantsSeen === 0) process.stderr.write("aviso: o dump não contém GRANT/REVOKE (gerado sem privilégios?); exposição não pode ser provada\n");
+  } else {
+    const rls = loadRls(root, opts.rls, state);
+    model = rls.model;
+    source = "migrações SQL";
+    if (!model) {
+      process.stderr.write("nenhum arquivo .sql encontrado (procurado em supabase/, migrations/, db/ ou --rls <dir>)\n");
+      model = parseSqlCorpus({});
+    }
+  }
+  const audit = auditTables(model, { schemaDump: !!opts.schemaDump, assumeDefaultGrants: !!opts.assumeDefaultGrants });
+  const meta = { engine: `atlasxis ${PKG.version}`, version: PKG.version, source, assumeDefaultGrants: !!opts.assumeDefaultGrants };
+  const fmt = opts.ci ? "json" : (opts.format || "markdown");
+  emit(fmt === "json" ? rlsToJSON(audit, meta) : fmt === "sarif" ? rlsToSARIF(audit, meta) : rlsToMarkdown(audit, meta));
+  emit("\n");
+  if (opts.ci) {
+    const s = audit.summary, vuln = s.VULNERABLE || 0, insuf = s.INSUFFICIENT_EVIDENCE || 0;
+    process.stderr.write(`atlasxis rls --ci: VULNERABLE=${vuln} INSUFFICIENT=${insuf} — INSUFFICIENT NÃO significa seguro\n`);
+    if (vuln > 0) process.exitCode = 2;
+    if (opts.failOn === "insufficient" && (vuln > 0 || insuf > 0)) process.exitCode = 2;
+  }
+}
+
 function cmdVersion() {
   process.stdout.write(`atlasxis ${PKG.version}\n`);
 }
@@ -284,6 +334,10 @@ function parseArgs(argv) {
     else if (argv[i] === "--ci") opts.ci = true;
     else if (argv[i] === "--fail-on") opts.failOn = argv[++i];
     else if (argv[i] === "--out") opts.out = argv[++i];
+    else if (argv[i] === "--schema-dump") opts.schemaDump = argv[++i];
+    else if (argv[i] === "--assume-default-grants") opts.assumeDefaultGrants = true;
+    else if (argv[i] === "--server-actions") opts.serverActions = true;
+    else if (argv[i] === "--no-server-actions") opts.serverActions = false;
     else if (argv[i] === "--timeout") opts.timeoutMs = Math.max(1, Math.floor((Number(argv[++i]) || 0) * 1000));
     else if (argv[i].startsWith("--")) { process.stderr.write(`erro: flag desconhecida: ${argv[i]}\n`); process.exit(1); }
     else pos.push(argv[i]);
@@ -297,8 +351,9 @@ Certifica evidência estrutural de autorização por sink.
 Nunca afirma "seguro" — afirma somente: provado controlado, provado vulnerável, ou não foi possível provar.
 
 Uso:
-  atlasxis scan <path> [--format json|markdown|sarif] [--rls <dir>] [--ci] [--fail-on insufficient] [--timeout <s>]
+  atlasxis scan <path> [--format json|markdown|sarif] [--rls <dir>] [--ci] [--fail-on insufficient] [--timeout <s>] [--no-server-actions]
   atlasxis report <path> [--rls <dir>] [--out <arquivo.md>]
+  atlasxis rls <path> [--rls <dir> | --schema-dump <arquivo.sql>] [--assume-default-grants] [--format json|markdown|sarif] [--ci]
   atlasxis explain <REASON_CODE>
   atlasxis baseline <path>
   atlasxis diff <baseline.json> <path>
@@ -312,6 +367,7 @@ const { opts, pos } = parseArgs(rest);
 try {
   if (cmd === "scan") cmdScan(pos[0] || ".", opts);
   else if (cmd === "report") cmdReport(pos[0] || ".", opts);
+  else if (cmd === "rls") cmdRls(pos[0] || ".", opts);
   else if (cmd === "explain") cmdExplain(pos[0]);
   else if (cmd === "baseline") cmdBaseline(pos[0] || ".", opts);
   else if (cmd === "diff") cmdDiff(pos[0], pos[1] || ".", opts);

@@ -65,13 +65,28 @@ add("determinismo (2 execuções idênticas)", d1.out.replace(/\s+/g, "") === d2
 
 // repositório adversarial: 17 padrões, abstém quando não pode provar
 const adv = run("node", ["adversarial-repo.mjs"], join(root, "core/harness"));
-add("repositório adversarial (17 padrões, abstenção correta)", adv.ok, (adv.out.match(/fail=(\d+) false-control=(\d+)/) || []).slice(1).join("/") ? "fail/fc " + adv.out.match(/fail=(\d+) false-control=(\d+)/).slice(1, 3).join("/") : "");
+add(`repositório adversarial (${(adv.out.match(/\((\d+) padrões\)/) || [])[1] || "?"} padrões, abstenção correta)`, adv.ok, (adv.out.match(/fail=(\d+) false-control=(\d+)/) || []).slice(1).join("/") ? "fail/fc " + adv.out.match(/fail=(\d+) false-control=(\d+)/).slice(1, 3).join("/") : "");
 
 // validação pública: corpus SINTÉTICO autocontido (public-corpus/). Demonstra
 // os mecanismos + Proof Integrity = 0. Reprodutível por qualquer terceiro.
 const exp = run("node", ["external-public.mjs"], join(root, "core/harness"));
 const expM = exp.out.match(/fail=(\d+) false-control=(\d+) false-vuln=(\d+) integrity=(\d+)/);
 add("validação pública (corpus sintético, Proof Integrity)", exp.ok && expM && expM.slice(1).every((x) => x === "0"), expM ? "8 mecanismos, integridade 0" : "ver saída");
+
+// auditoria de RLS por tabela: certificação (positivos, negativos, armadilhas,
+// integridade e mutação causal). Autocontida — roda em qualquer máquina.
+const rlsA = run("node", ["rls-audit-suite.mjs"], join(root, "core/harness"));
+const rlsM = rlsA.out.match(/rls-audit: cases=(\d+) fail=(\d+) false-control=(\d+) false-vuln=(\d+) integrity=(\d+) survivors=(\d+)/);
+const rlsMut = rlsA.out.match(/mutações causais: (\d+)\/(\d+)/);
+add("auditoria de RLS por tabela (certificação)", rlsA.ok && rlsM && rlsM.slice(2).every((x) => x === "0"),
+  rlsM ? `${rlsM[1]} casos, fc/fv 0/0, mutações ${rlsMut ? rlsMut[1] + "/" + rlsMut[2] : "?"}` : "ver saída");
+
+// server actions (Next.js "use server"): certificação autocontida
+const sa = run("node", ["server-actions-suite.mjs"], join(root, "core/harness"));
+const saM = sa.out.match(/server-actions: cases=(\d+) fail=(\d+) false-control=(\d+) false-vuln=(\d+) integrity=(\d+) survivors=(\d+)/);
+const saMut = sa.out.match(/mutações causais: (\d+)\/(\d+)/);
+add("server actions (certificação)", sa.ok && saM && saM.slice(2).every((x) => x === "0"),
+  saM ? `${saM[1]} casos, fc/fv 0/0, mutações ${saMut ? saMut[1] + "/" + saMut[2] : "?"}` : "ver saída");
 
 // segurança operacional: projeto malicioso não compromete o analisador
 const ops = run("node", ["operational-security.mjs"], join(root, "core/harness"));

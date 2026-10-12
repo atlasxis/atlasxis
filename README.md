@@ -63,6 +63,44 @@ With RLS evidence from your migrations:
 npx atlasxis scan . --rls ./supabase/migrations
 ```
 
+## Auditing Supabase tables (RLS)
+
+Many apps call Supabase **straight from the browser**, with no API routes. Their
+only protection is Row Level Security and table privileges. `atlasxis rls`
+audits every table × role (`anon`, `authenticated`) × operation
+(select/insert/update/delete) directly from your SQL:
+
+```bash
+npx atlasxis rls .                                  # reads supabase/, migrations/, db/
+npx atlasxis rls . --schema-dump prod-schema.sql    # proof from a production dump
+npx atlasxis rls . --ci                             # exit 2 if any table is VULNERABLE
+```
+
+- **`CONTROLLED`**: policies restrict rows to their owner, RLS is on with no
+  policy opening the operation, or the role has no privilege on the table.
+- **`VULNERABLE`**: a table with per-user rows is reachable by the role (explicit
+  `GRANT`, a production dump, or `--assume-default-grants`) **and** RLS is
+  provably off, or a policy lets anyone update/delete any row (`using (true)`).
+- **`?` (INSUFFICIENT)**: e.g. *"RLS is never enabled in your migrations"*. It
+  may have been enabled in the dashboard, so Atlasxis will not call it
+  vulnerable. Get proof with a dump: `supabase db dump -f prod-schema.sql`.
+
+Atlasxis **never assumes Supabase's default grants**: the default changed in
+2026 (new projects since May 30, 2026; new tables in existing projects since
+October 30, 2026). If your project still uses the old defaults, say so with
+`--assume-default-grants`; it is recorded as an assumption in every finding.
+
+## Server actions
+
+Next.js server actions (files that start with `"use server"`) are public
+endpoints: anyone can call an exported action with any arguments. Atlasxis can
+analyze them with the same proof engine used for API routes, treating every
+argument and `formData.get(...)` field as client input:
+
+Server actions are analyzed by default (`--no-server-actions` turns it off; the
+scan then reports how many `"use server"` files it skipped). Validated on 7
+real open-source projects before being enabled.
+
 ## Example output
 
 Run it against one of the synthetic fixtures in this repository:
@@ -136,9 +174,10 @@ A composite action is also available in
 ## Limitations (read before trusting it)
 
 Current scope: Next.js App/Pages Router **API routes** + Supabase JS client,
-with RLS read from SQL migrations. Server actions, client-side Supabase calls,
-Prisma/Drizzle and other frameworks are outside the model and come out as
-`NOT_ANALYZED` or are not discovered at all — never as a verdict. The full,
+and Supabase tables via `atlasxis rls` (which covers apps that call Supabase
+from the browser), and server actions (`"use server"` files). Prisma/Drizzle, inline `"use server"` functions and other frameworks are outside
+the model and come out as `NOT_ANALYZED` or are not discovered at all — never
+as a verdict. The full,
 honest list is in [docs/LIMITATIONS.md](docs/LIMITATIONS.md) (Portuguese).
 **Independent human validation: PENDING.**
 

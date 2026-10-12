@@ -61,6 +61,46 @@ Com evidência de RLS das suas migrações:
 npx atlasxis scan . --rls ./supabase/migrations
 ```
 
+## Auditoria das tabelas do Supabase (RLS)
+
+Muitos apps chamam o Supabase **direto do navegador**, sem rotas de API. A única
+proteção deles é o Row Level Security e os privilégios das tabelas. O
+`atlasxis rls` audita cada tabela × papel (`anon`, `authenticated`) × operação
+(select/insert/update/delete) direto do seu SQL:
+
+```bash
+npx atlasxis rls .                                  # lê supabase/, migrations/, db/
+npx atlasxis rls . --schema-dump schema-producao.sql  # prova a partir de um dump de produção
+npx atlasxis rls . --ci                             # exit 2 se alguma tabela estiver VULNERABLE
+```
+
+- **`CONTROLLED`**: as policies restringem as linhas ao dono, ou o RLS está
+  ligado sem policy liberando a operação, ou o papel não tem privilégio.
+- **`VULNERABLE`**: tabela com linhas por usuário é alcançável pelo papel
+  (`GRANT` explícito, dump de produção ou `--assume-default-grants`) **e** o RLS
+  está comprovadamente desligado, ou uma policy deixa qualquer um alterar/apagar
+  qualquer linha (`using (true)`).
+- **`?` (INSUFFICIENT)**: por exemplo, *"o RLS nunca é ligado nas migrações"*.
+  Ele pode ter sido ligado pelo dashboard, então o Atlasxis não acusa
+  vulnerabilidade. Para ter prova, gere um dump: `supabase db dump -f schema-producao.sql`.
+
+O Atlasxis **nunca presume os grants padrão do Supabase**: o padrão mudou em
+2026 (projetos novos desde 30/05/2026; tabelas novas de projetos existentes
+desde 30/10/2026). Se o seu projeto ainda usa o padrão antigo, declare com
+`--assume-default-grants`; isso fica registrado como assumption em cada achado.
+
+## Server actions
+
+As server actions do Next.js (arquivos que começam com `"use server"`) são
+endpoints públicos: qualquer pessoa pode chamar uma action exportada com
+quaisquer argumentos. O Atlasxis analisa essas actions com o mesmo motor de
+provas das rotas de API, tratando todo argumento e todo campo de
+`formData.get(...)` como entrada do cliente:
+
+As server actions são analisadas por padrão (`--no-server-actions` desliga; aí o
+scan informa quantos arquivos `"use server"` deixou de analisar). Foram
+validadas em 7 projetos open source reais antes de serem ligadas.
+
 ## Exemplo de saída
 
 Rode contra uma das fixtures sintéticas do repositório:
@@ -131,9 +171,11 @@ Também há uma action composta em
 ## Limitações (leia antes de confiar)
 
 Escopo atual: **rotas de API** do Next.js (App/Pages Router) + cliente JS do
-Supabase, com RLS lida das migrações SQL. Server actions, chamadas ao Supabase
-feitas no navegador, Prisma/Drizzle e outros frameworks ficam fora do modelo:
-saem como `NOT_ANALYZED` ou nem são descobertos, nunca como veredito. Lista
+Supabase, e as tabelas do Supabase via `atlasxis rls` (que cobre apps que
+chamam o Supabase direto do navegador), e as server actions (arquivos
+`"use server"`). Prisma/Drizzle, funções com `"use server"` inline e
+outros frameworks ficam fora do modelo: saem como `NOT_ANALYZED` ou nem são
+descobertos, nunca como veredito. Lista
 completa em [docs/LIMITATIONS.md](docs/LIMITATIONS.md).
 **Validação humana independente: PENDENTE.**
 

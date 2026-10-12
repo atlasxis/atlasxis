@@ -10,12 +10,13 @@ Análise 100% estática: **nenhum código do projeto analisado é executado**.
 | `atlasxis scan <path>` | Analisa o projeto e emite o relatório (`--format json\|markdown\|sarif`) |
 | `atlasxis scan <path> --ci` | Saída JSON + política de CI (exit 2 se houver VULNERABLE) |
 | `atlasxis report <path>` | Proof Report por sink: arquivo, linha, ProofChain completa (`--out <f.md>`) |
+| `atlasxis rls <path>` | Auditoria de RLS por tabela × papel × operação, a partir do SQL (`--rls <dir>`, `--schema-dump <arquivo>`, `--assume-default-grants`, `--format`, `--ci`) |
 | `atlasxis explain <REASON_CODE>` | Explica um reason code: status, significado, o que prova, o que não prova |
 | `atlasxis baseline <path>` | Grava `.atlasxis-baseline.json` com as decisões atuais |
 | `atlasxis diff <baseline> <path>` | Regressões de autorização vs baseline (exit 1 se houver) |
 | `atlasxis version` | Versão do engine |
 
-Flags: `--rls <dir>` (corpus SQL), `--fail-on insufficient` (endurece a política
+Flags: `--no-server-actions` (não analisa arquivos "use server"; por padrão são analisados), `--rls <dir>` (corpus SQL), `--fail-on insufficient` (endurece a política
 de CI), `--timeout <s>` (padrão 120 s), `--out <arquivo>` (report).
 
 ## Exit codes (estáveis)

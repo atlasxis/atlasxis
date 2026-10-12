@@ -47,6 +47,19 @@ export const EXPLANATIONS = Object.freeze({
     not_proven: "Alterações de política fora do corpus SQL fornecido.",
   },
 
+  CONTROLLED_RLS_DEFAULT_DENY: {
+    status: "CONTROLLED",
+    meaning: "RLS está ligado na tabela e nenhuma policy libera esta operação para este papel: o banco nega todas as linhas.",
+    proven: "RLS habilitado + ausência de policy permissiva aplicável ao papel e à operação.",
+    not_proven: "Policies criadas fora do SQL analisado (ex.: pelo dashboard).",
+  },
+  CONTROLLED_PRIVILEGE_NOT_GRANTED: {
+    status: "CONTROLLED",
+    meaning: "O papel não tem privilégio na tabela para esta operação (REVOKE explícito, ou ausência de GRANT num dump completo): a API recusa o acesso.",
+    proven: "Estado de privilégios do papel para a operação, a partir do SQL analisado.",
+    not_proven: "Grants concedidos fora do SQL analisado.",
+  },
+
   // ---- VULNERABLE — evidência positiva de caminho sem autorização ----
   VULNERABLE_NO_GATING_SERVICE_ROLE: {
     status: "VULNERABLE",
@@ -59,6 +72,19 @@ export const EXPLANATIONS = Object.freeze({
     meaning: "RLS desabilitada na tabela com grants default do Supabase: qualquer authenticated lê/escreve linhas de terceiros.",
     proven: "Migração com RLS disabled + grants default + sink alcançável com id controlável e sem gate no app.",
     not_proven: "Revogações de grant fora do corpus SQL fornecido.",
+  },
+
+  VULNERABLE_RLS_TABLE_EXPOSED: {
+    status: "VULNERABLE",
+    meaning: "Tabela com dono por linha, RLS comprovadamente desligado e o papel tem privilégio: qualquer pessoa com a chave pública (anon) ou qualquer usuário logado acessa as linhas de todos.",
+    proven: "RLS desligado (DISABLE explícito ou dump completo sem ENABLE) + privilégio do papel (GRANT explícito, dump ou --assume-default-grants) + coluna de dono.",
+    not_proven: "Exploração em runtime; mudanças feitas fora do SQL analisado.",
+  },
+  VULNERABLE_RLS_POLICY_OPEN_WRITE: {
+    status: "VULNERABLE",
+    meaning: "Uma policy permite alterar ou apagar QUALQUER linha (using (true)) numa tabela com dono por linha: um usuário altera/apaga dados de outros.",
+    proven: "RLS ligado + policy permissiva literal true para UPDATE/DELETE do papel + nenhuma policy restritiva aplicável + privilégio do papel + coluna de dono.",
+    not_proven: "Se a abertura total foi intencional (a convenção de dono indica que não).",
   },
 
   // ---- INSUFFICIENT — não foi possível provar (nunca significa SAFE) ----
@@ -147,6 +173,43 @@ export const EXPLANATIONS = Object.freeze({
     not_proven: "Tudo — trate como não analisado.",
   },
 
+  INSUFFICIENT_IDENTITY_FROM_CLIENT: {
+    status: "INSUFFICIENT_EVIDENCE",
+    meaning: "A identidade usada nas checagens (user, session, authUser) vem de dado que o cliente controla — corpo, query, params, formData, cookies crus ou argumento da função. Quem chama pode se passar por qualquer usuário.",
+    proven: "Que a variável de identidade é derivada de entrada do cliente.",
+    not_proven: "Que exista alguma verificação real da identidade (ex.: token validado) antes do uso — o motor não confia nela.",
+  },
+  INSUFFICIENT_OWNER_OVERRIDABLE: {
+    status: "INSUFFICIENT_EVIDENCE",
+    meaning: "A escrita grava o dono (user_id: user.id) junto com um spread de dados ({ ...dados }). As colunas do spread são desconhecidas: podem sobrescrever o dono ou apontar para recursos de outros usuários.",
+    proven: "Que existe um vínculo de dono no objeto gravado.",
+    not_proven: "Que o spread não contém o campo de dono nem referências a recursos de terceiros. Grave as colunas explicitamente para que a prova seja possível.",
+  },
+  INSUFFICIENT_RLS_NOT_ENABLED_IN_CORPUS: {
+    status: "INSUFFICIENT_EVIDENCE",
+    meaning: "As migrações nunca ligam o RLS desta tabela. Se isso refletir produção, o acesso depende só dos privilégios — e pode estar totalmente aberto.",
+    proven: "Ausência de ENABLE ROW LEVEL SECURITY no SQL analisado.",
+    not_proven: "Estado real em produção (o RLS pode ter sido ligado pelo dashboard). Use --schema-dump para ter prova.",
+  },
+  INSUFFICIENT_RLS_GRANTS_UNKNOWN: {
+    status: "INSUFFICIENT_EVIDENCE",
+    meaning: "O acesso depende de o papel ter privilégio na tabela, e o SQL não diz. O padrão do Supabase mudou em 2026, então não dá para presumir.",
+    proven: "O estado de RLS/policies desta operação.",
+    not_proven: "Se o papel tem GRANT na tabela. Use --schema-dump, ou --assume-default-grants se o projeto usa o padrão antigo.",
+  },
+  INSUFFICIENT_RLS_OFF_UNOWNED: {
+    status: "INSUFFICIENT_EVIDENCE",
+    meaning: "RLS desligado e o papel tem acesso, mas a tabela não tem coluna de dono: não dá para provar que as linhas são privadas (pode ser uma tabela pública de propósito).",
+    proven: "Acesso total do papel à tabela.",
+    not_proven: "Que os dados deveriam ser privados.",
+  },
+  INSUFFICIENT_RLS_STATE_UNCERTAIN: {
+    status: "INSUFFICIENT_EVIDENCE",
+    meaning: "O RLS ou os privilégios desta tabela são alterados dentro de blocos condicionais (DO ... IF): o estado final depende de condições que o motor não avalia.",
+    proven: "Que existem alterações condicionais.",
+    not_proven: "O estado final de RLS/privilégios.",
+  },
+
   // ---- NOT_ANALYZED — fora do que o motor modela (nunca significa SAFE) ----
   NOT_ANALYZED_NO_HANDLER: {
     status: "NOT_ANALYZED",
@@ -172,6 +235,11 @@ export const EXPLANATIONS = Object.freeze({
     status: "NOT_ANALYZED",
     meaning: "Arquivo descoberto mas não classificado pelo pipeline de análise.",
     proven: "—", not_proven: "Qualquer propriedade.",
+  },
+  NOT_ANALYZED_NON_PUBLIC_SCHEMA: {
+    status: "NOT_ANALYZED",
+    meaning: "Tabela fora do schema public (ex.: storage, auth): não é exposta pela API de dados padrão e tem regras próprias.",
+    proven: "—", not_proven: "Qualquer propriedade desta tabela.",
   },
   NOT_ANALYZED_PARSE_ERROR: {
     status: "NOT_ANALYZED",

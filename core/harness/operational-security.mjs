@@ -153,6 +153,19 @@ process.stdout.write("SEGURANÇA OPERACIONAL — projeto malicioso não pode com
   check("timeout estourado → exit 4 com erro explícito", r.code === 4 && /timeout/.test(r.err), `code=${r.code}`);
 }
 
+// 9b. ReDoS: arquivo inteiro de código comentado não pode travar a descoberta
+// (regressão do pré-filtro de "use server" achada na validação externa)
+{
+  const p = proj("redos");
+  route(p, BENIGN_ROUTE);
+  writeFileSync(join(p, "src", "commented.ts"), "// a // b // c https://x.y // d\n".repeat(20000) + "export const x = 1;\n");
+  writeFileSync(join(p, "src", "commented2.tsx"), "'use client'\n" + "// import { x } from 'y' // z\n".repeat(20000));
+  const t0 = Date.now();
+  const r = runCli(["scan", p, "--format", "json", "--server-actions"]);
+  const ms = Date.now() - t0;
+  check(`arquivo patológico não trava o scan (${ms} ms)`, r.code === 0 && ms < 15000, `code=${r.code} signal=${r.signal}`);
+}
+
 // 10. determinismo do produto: scan e report byte-idênticos em duas execuções
 {
   const p = proj("determinism");

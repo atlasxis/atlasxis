@@ -1,0 +1,48 @@
+{
+  "id": "client-controlled-identity",
+  "title": "Identidade controlada pelo cliente não sustenta prova (correção de falso CONTROLLED da v1.0.3)",
+  "status": "CERTIFIED",
+  "origin": {
+    "project": "revisão adversarial do próprio Atlasxis durante o suporte a server actions",
+    "location": "core/engine.mjs (guard) + core/extract.mjs (identityFromClient)",
+    "date": "2026-10-12"
+  },
+  "mechanism": "a identidade é reconhecida pelo texto (user.id, session.user.id, authUser.id); se a variável raiz vier do corpo, query, params, formData, cookies crus, headers ou de um argumento da função, o atacante escolhe a identidade e passa em qualquer checagem de dono",
+  "oracle_result": {
+    "status": "INSUFFICIENT_EVIDENCE",
+    "reasonCode": "INSUFFICIENT_IDENTITY_FROM_CLIENT"
+  },
+  "ground_truth": {
+    "decision": "nunca CONTROLLED",
+    "source": "construction",
+    "justification": "uma comparação dono === identidade só autoriza se a identidade vier do servidor; se o cliente fornece os dois lados, a checagem é contornável por definição."
+  },
+  "evidence": "Na v1.0.3, 5 variantes davam CONTROLLED (POST_READ_GATE ou SELF_SCOPE) com user/session vindos do cliente. Depois da correção: as 8 variantes testadas viram INSUFFICIENT_IDENTITY_FROM_CLIENT; controles (auth(), supabase.auth.getUser()) seguem CONTROLLED; benchmark 532, adversarial e validação pública byte-idênticos; em código real (51 rotas, 87 sinks) 0 decisões mudaram.",
+  "code_ref": "core/extract.mjs",
+  "fixtures": {
+    "positive": [
+      "core/harness/adversarial-repo.mjs"
+    ],
+    "negative": [
+      "core/harness/adversarial-repo.mjs"
+    ],
+    "adversarial": [
+      "core/harness/adversarial-repo.mjs"
+    ]
+  },
+  "regression": "core/harness/adversarial-repo.mjs (padrões 18-23)",
+  "certification": {
+    "real_case": true,
+    "ground_truth": true,
+    "fixture_positive": true,
+    "fixture_negative": true,
+    "fixture_adversarial": true,
+    "regression_pass": true,
+    "mutation_pass": true,
+    "benchmark_pass": true,
+    "external_pass": true,
+    "no_false_control_increase": true
+  },
+  "human_validation": "Variantes construídas e revisadas pelo mantenedor; auditoria cega independente PENDING.",
+  "notes": "Mutação causal: sem o guard (engine da v1.0.3), os padrões 18-22 dão CONTROLLED — a correção é exatamente o que os torna INSUFFICIENT. Afeta resultados CONTROLLED das versões 1.0.0 a 1.0.3."
+}

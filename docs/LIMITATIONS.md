@@ -1,5 +1,26 @@
 # LIMITATIONS — o que o Atlasxis v1 NÃO prova (reportado explicitamente)
 
+> **Server actions**: só arquivos cuja primeira instrução é `"use server"`;
+> actions inline em componentes não são descobertas (GAP registrado).
+>
+> **Escritas com o dono**: um insert/update que grava `user_id = user.id` só é
+> CONTROLLED se gravar colunas explícitas. Com spread (`{ ...dados }`) sai
+> INSUFFICIENT_OWNER_OVERRIDABLE; com uma coluna `*_id` escolhida pelo cliente,
+> INSUFFICIENT_CROSS_RESOURCE.
+
+> **Identidade vinda do cliente**: se `user`/`session`/`authUser` vier de
+> corpo, query, params, formData, cookies crus, headers ou argumento, o handler
+> sai INSUFFICIENT_IDENTITY_FROM_CLIENT. Identidade obtida de helpers
+> desconhecidos segue sob a assumption SERVER_IDENTITY.
+
+> **Auditoria de RLS por tabela (`atlasxis rls`)**: lê só SQL (migrações ou dump).
+> Não presume os grants padrão do Supabase (o padrão mudou em 2026). Sem dump,
+> "RLS nunca ligado nas migrações" é INSUFFICIENT, nunca VULNERABLE. Policies de
+> participação via `EXISTS` em outra tabela e conjunções com a condição de dono
+> ainda saem INSUFFICIENT (GAPs registrados na case library). Tabelas fora do
+> schema `public` (storage, auth) ficam NOT_ANALYZED. Views, funções RPC e o
+> Storage não são auditados.
+
 Correção > cobertura. Estas são fronteiras conhecidas onde o motor abstém em vez
 de arriscar um false-control. Nenhuma é escondida.
 

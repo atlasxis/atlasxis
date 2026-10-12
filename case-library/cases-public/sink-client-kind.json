@@ -1,0 +1,50 @@
+{
+  "id": "sink-client-kind",
+  "title": "Tipo de cliente Supabase por acesso, não por arquivo (correção de falso VULNERABLE da 1.0.3)",
+  "status": "CERTIFIED",
+  "origin": {
+    "project": "validação externa: 7 repositórios públicos de terceiros com server actions + Supabase (não nomeados aqui; registro no repositório do mantenedor)",
+    "location": "core/engine.mjs + core/extract.mjs",
+    "date": "2026-10-12"
+  },
+  "mechanism": "o cliente (service_role × authenticated) é decidido pela variável que faz o .from(...) naquele sink",
+  "oracle_result": {
+    "status": "por sink",
+    "reasonCode": "VULNERABLE só para sinks feitos com cliente admin"
+  },
+  "ground_truth": {
+    "decision": "num arquivo com vários handlers, um handler que usa o cliente do usuário (sujeito a RLS) não pode virar VULNERABLE por causa do cliente admin de outro handler",
+    "source": "construction",
+    "justification": "num arquivo com vários handlers, um handler que usa o cliente do usuário (sujeito a RLS) não pode virar VULNERABLE por causa do cliente admin de outro handler"
+  },
+  "evidence": "Na 1.0.3 o cliente era decidido pelo arquivo inteiro: 13 falsos VULNERABLE em código real. Depois: 0; o positivo verdadeiro (admin sem checagem no mesmo arquivo) continua VULNERABLE.",
+  "code_ref": "core/engine.mjs",
+  "fixtures": {
+    "positive": [
+      "core/harness/adversarial-repo.mjs",
+      "core/fixtures/server-actions.mjs"
+    ],
+    "negative": [
+      "core/harness/adversarial-repo.mjs"
+    ],
+    "adversarial": [
+      "core/harness/adversarial-repo.mjs",
+      "core/fixtures/server-actions.mjs"
+    ]
+  },
+  "regression": "core/harness/adversarial-repo.mjs (padrões 25-26) + core/fixtures/server-actions.mjs (SA9, SV5)",
+  "certification": {
+    "real_case": true,
+    "ground_truth": true,
+    "fixture_positive": true,
+    "fixture_negative": true,
+    "fixture_adversarial": true,
+    "regression_pass": true,
+    "mutation_pass": true,
+    "benchmark_pass": true,
+    "external_pass": true,
+    "no_false_control_increase": true
+  },
+  "human_validation": "Revisão manual pelo mantenedor no código real; auditoria cega independente PENDING.",
+  "notes": "Afeta resultados VULNERABLE das versões 1.0.0 a 1.0.3 em arquivos com handlers de clientes diferentes."
+}

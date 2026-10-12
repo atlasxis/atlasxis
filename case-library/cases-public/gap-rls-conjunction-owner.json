@@ -1,0 +1,26 @@
+{
+  "id": "gap-rls-conjunction-owner",
+  "title": "GAP: policy com AND contendo a condição de dono",
+  "status": "OBSERVED",
+  "origin": {
+    "project": "observado em SQL real não redistribuível",
+    "location": "using (auth.uid() is not null and user_id = auth.uid())",
+    "date": "2026-10-12"
+  },
+  "mechanism": "conjunção: um conjunto estritamente de dono AND outra condição só restringe mais",
+  "oracle_result": {
+    "status": "INSUFFICIENT_EVIDENCE",
+    "reasonCode": "INSUFFICIENT_RLS_POLICY_UNPROVEN"
+  },
+  "ground_truth": {
+    "decision": "N/A (gap de cobertura)",
+    "source": "construction",
+    "justification": "A AND B é provável quando um conjunto é de dono puro; mas o conjunto precisa ser analisado por inteiro (ex.: dono OR user_id is null NÃO é de dono puro)."
+  },
+  "evidence": "Hoje sai INSUFFICIENT, nunca CONTROLLED.",
+  "code_ref": "core/rls.mjs",
+  "fixtures": {},
+  "regression": "abstenção garantida por classifyPolicyExpr",
+  "human_validation": "—",
+  "notes": "Extensão pequena; exige fixture adversarial com OR dentro do conjunto."
+}

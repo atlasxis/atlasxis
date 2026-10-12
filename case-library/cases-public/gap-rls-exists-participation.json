@@ -1,0 +1,26 @@
+{
+  "id": "gap-rls-exists-participation",
+  "title": "GAP: policy de participação via EXISTS em outra tabela",
+  "status": "OBSERVED",
+  "origin": {
+    "project": "observado em SQL real não redistribuível",
+    "location": "policies do tipo using (exists (select 1 from conversas c where c.id = conversation_id and auth.uid() in (c.a, c.b)))",
+    "date": "2026-10-12"
+  },
+  "mechanism": "autorização relacional: o acesso à linha depende de o usuário ser participante de um registro em OUTRA tabela",
+  "oracle_result": {
+    "status": "INSUFFICIENT_EVIDENCE",
+    "reasonCode": "INSUFFICIENT_RLS_POLICY_UNPROVEN"
+  },
+  "ground_truth": {
+    "decision": "N/A (gap de cobertura, não erro de decisão)",
+    "source": "construction",
+    "justification": "abstenção correta hoje; provar exige resolver a subconsulta, a junção pela chave do recurso e a condição de participação, com a mesma disciplina (identidade do recurso, sem OR aberto)."
+  },
+  "evidence": "Padrão comum em mensagens privadas; hoje sai INSUFFICIENT, nunca CONTROLLED.",
+  "code_ref": "core/rls.mjs",
+  "fixtures": {},
+  "regression": "abstenção garantida por classifyPolicyExpr (disjunto não classificado)",
+  "human_validation": "—",
+  "notes": "Candidato prioritário à próxima capacidade certificada (mensagens privadas)."
+}

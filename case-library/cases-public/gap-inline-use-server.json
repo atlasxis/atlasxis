@@ -1,0 +1,26 @@
+{
+  "id": "gap-inline-use-server",
+  "title": "GAP: diretiva \"use server\" dentro de função (action inline em componente)",
+  "status": "OBSERVED",
+  "origin": {
+    "project": "padrão documentado do Next.js",
+    "location": "async function salvar(formData) { \"use server\"; ... } dentro de um Server Component",
+    "date": "2026-10-12"
+  },
+  "mechanism": "descoberta de actions declaradas inline, que não são exportadas mas viram endpoints",
+  "oracle_result": {
+    "status": "N/A (não descoberta)",
+    "reasonCode": "—"
+  },
+  "ground_truth": {
+    "decision": "N/A (gap de cobertura)",
+    "source": "construction",
+    "justification": "a action inline é um endpoint como as de arquivo; hoje não é descoberta."
+  },
+  "evidence": "Só arquivos com \"use server\" no topo são analisados.",
+  "code_ref": "core/extract.mjs",
+  "fixtures": {},
+  "regression": "—",
+  "human_validation": "—",
+  "notes": "Próximo passo natural das server actions depois da certificação."
+}

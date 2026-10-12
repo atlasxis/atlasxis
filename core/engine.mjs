@@ -5,7 +5,8 @@
 
 import {
   ts, parse, findAll, isDead, callee, T, canonText,
-  discoverHandlers, collectSources, clientKind, findAllSinks, resolveFn,
+  discoverHandlers, collectSources, clientKind, findAllSinks, resolveFn, identityFromClient,
+  discoverServerActions, collectActionSources, sinkClientKind, collectReads,
   isImportedUnresolved, queryInfo as queryInfoLocal, OWNER, CONTAINER,
 } from "./extract.mjs";
 import {
@@ -46,11 +47,12 @@ function sourceFor(rid, sources) {
   return Source(det ? det.kind : "unknown-client-expr", rid);
 }
 
-export function analyzeHandlerIR(fn, sf, code, path, files, rls) {
+export function analyzeHandlerIR(fn, sf, code, path, files, rls, opts = {}) {
   const rlsN = normalizeRlsInput(rls);
   const method = fn.name?.text || fn.__name || "?";
-  const sources = collectSources(fn, sf);
-  const client = clientKind(code);
+  const sources = opts.kind === "action" ? collectActionSources(fn, sf) : collectSources(fn, sf);
+  const fileClient = clientKind(code);
+  const client = fileClient;
   const resolveIdent = makeResolveIdent(fn, sf);
   const sinks = findAllSinks(fn, sf);
   const minPos = sinks.length ? Math.min(...sinks.map((s) => s.pos)) : Infinity;
@@ -60,6 +62,11 @@ export function analyzeHandlerIR(fn, sf, code, path, files, rls) {
     decision: mkDecision({ unit: "handler", method, path, status, reasonCode, proof, assumptions: assumptionRefs(assumptions), unknowns }),
     sinkDecisions: [],
   });
+
+  // ---- identidade vinda do cliente: nenhuma prova baseada em user.id vale ----
+  const tainted = identityFromClient(fn, sf, sources.exprs);
+  if (tainted.length)
+    return handlerLevel(STATUS.INSUFFICIENT, REASON.INSUFFICIENT_IDENTITY_FROM_CLIENT, null, [], tainted);
 
   // ---- OOS: admin (helper estrutural, path, ou role-gate inline provado) ----
   const ag = proveAdminHelper(fn, sf, files, minPos);
@@ -132,6 +139,8 @@ export function analyzeHandlerIR(fn, sf, code, path, files, rls) {
   };
 
   const decideSink = (sink) => {
+    // tipo de cliente do PRÓPRIO sink (não do arquivo inteiro)
+    const client = sinkClientKind(sink, fn, sf, fileClient);
     const rids = clientRids(sink);
     const sinkInfo = { table: sink.table, op: sink.op, pos: sink.pos };
     const D = (status, reasonCode, proof, assumptions, unknowns = [], applicable = true) => ({
@@ -366,6 +375,28 @@ export function analyzeHandlerIR(fn, sf, code, path, files, rls) {
     }
 
     // sem rid do cliente
+    // Spread no objeto gravado ({ user_id: user.id, ...dados }): colunas
+    // desconhecidas entram na escrita e podem SOBRESCREVER o dono ou apontar para
+    // recursos de outros. O vínculo de dono deixa de ser prova — nunca CONTROLLED.
+    if (selfOwned(sink) && /insert|upsert|update/.test(sink.op) && (sink.spreads || []).length)
+      return D(STATUS.INSUFFICIENT, REASON.INSUFFICIENT_OWNER_OVERRIDABLE, null, [],
+        sink.spreads.map((x) => `...${x} grava colunas desconhecidas junto com o dono; elas podem sobrescrever o dono ou referenciar recursos de outros`));
+
+    // Referência escolhida pelo cliente gravada junto com o dono: o registro do
+    // usuário aponta para um recurso de OUTRO (ex.: campaign_id vindo do
+    // argumento, ou de uma linha lida com filtro do cliente). O self-scope prova
+    // só a posse da linha, não a do recurso referenciado — nunca CONTROLLED.
+    // Também nunca VULNERABLE: a referência pode ser a uma tabela pública.
+    if (selfOwned(sink) && /insert|upsert|update/.test(sink.op)) {
+      const taintedRows = new Set();
+      for (const r of collectReads(fn, sf, sink.pos))
+        if ((r.q.filters || []).some((f) => sources.exprs.has(f.val))) r.bindings.forEach((b) => taintedRows.add(b));
+      const clientRefs = (sink.fields || []).filter((f) => /(^id$|_id$)/.test(f.key) && !OWNER.has(f.key) && f.val &&
+        (sources.exprs.has(f.val) || [...taintedRows].some((b) => f.val === b || f.val.startsWith(b + "."))));
+      if (clientRefs.length)
+        return D(STATUS.INSUFFICIENT, REASON.INSUFFICIENT_CROSS_RESOURCE, null, [],
+          clientRefs.map((f) => `${f.key} = ${f.val}: o registro do usuário referencia um recurso escolhido pelo cliente; a autorização sobre esse recurso não foi provada`));
+    }
     if (selfOwned(sink)) {
       const proof = ProofChain({
         mechanism: "self-scope",
@@ -402,7 +433,8 @@ export function analyzeHandlerIR(fn, sf, code, path, files, rls) {
   };
 }
 
-export function analyzeFileIR(files, entry, rls = {}) {
+export function analyzeFileIR(files, entry, rls = {}, opts = {}) {
+  if (opts.kind === "action") return analyzeActionFile(files, entry, rls);
   const code = files[entry];
   const sf = parse(code);
   const hs = discoverHandlers(sf);
@@ -425,4 +457,35 @@ export function analyzeFileIR(files, entry, rls = {}) {
 // visão compatível com o formato do analyzer6 (para o harness diferencial)
 export function legacyView(results) {
   return results.map((r) => ({ method: r.method, verdict: r.decision.status, reason: r.decision.reasonCode, client: r.client }));
+}
+
+// ---------- server actions ----------
+// Mesmo motor de provas das rotas; muda só a descoberta (funções exportadas de um
+// arquivo "use server") e as fontes (argumentos = cliente). Toda decisão carrega
+// a assumption SERVER_ACTION_IS_PUBLIC_ENDPOINT.
+function analyzeActionFile(files, entry, rls) {
+  const code = files[entry];
+  const sf = parse(code);
+  const hs = discoverServerActions(sf);
+  const tag = (res, name) => {
+    const label = `ACTION ${name}`;
+    const extra = assumptionRefs([A.SERVER_ACTION_IS_PUBLIC_ENDPOINT]);
+    for (const d of [res.decision, ...res.sinkDecisions]) {
+      d.method = label;
+      if (!d.assumptions.some((a) => a.id === A.SERVER_ACTION_IS_PUBLIC_ENDPOINT)) d.assumptions = [...d.assumptions, ...extra];
+    }
+    return { ...res, method: label };
+  };
+  if (!hs.length)
+    return [tag({ method: "?", client: "unknown", sinkDecisions: [], decision: mkDecision({ unit: "handler", method: "?", path: entry, status: STATUS.NOT_ANALYZED, reasonCode: REASON.NOT_ANALYZED_NO_HANDLER, unknowns: ["arquivo \"use server\" sem função async exportada"] }) }, "?")];
+  return hs.map((h) => {
+    if (!h.supported)
+      return tag({ method: h.name, client: "unknown", sinkDecisions: [], decision: mkDecision({ unit: "handler", method: h.name, path: entry, status: STATUS.NOT_ANALYZED, reasonCode: REASON.NOT_ANALYZED_UNSUPPORTED_SYNTAX, unknowns: ["server action exportada em forma não analisável (ex.: wrapper) — nunca tratar como segura"] }) }, h.name);
+    try {
+      h.fn.__name = h.name;
+      return tag(analyzeHandlerIR(h.fn, sf, code, entry, files, rls, { kind: "action" }), h.name);
+    } catch (e) {
+      return tag({ method: h.name, client: "unknown", sinkDecisions: [], decision: mkDecision({ unit: "handler", method: h.name, path: entry, status: STATUS.INSUFFICIENT, reasonCode: REASON.INSUFFICIENT_ANALYSIS_ERROR, unknowns: [String(e.message).slice(0, 120)] }) }, h.name);
+    }
+  });
 }

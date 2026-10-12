@@ -21,6 +21,8 @@ const MECHANISM_FOR_REASON = {
   CONTROLLED_TRANSITIVE_OWNERSHIP: ["transitive-ownership"],
   CONTROLLED_RLS_DECLARED_OWNER: ["rls-declared-owner"],
   CONTROLLED_RLS_POLICY_OWNER: ["rls-policy-owner"],
+  CONTROLLED_RLS_DEFAULT_DENY: ["rls-default-deny"],
+  CONTROLLED_PRIVILEGE_NOT_GRANTED: ["privilege-not-granted"],
 };
 // assumptions que NUNCA podem sustentar um CONTROLLED
 const FORBIDDEN_IN_CONTROLLED = new Set(["SUPABASE_DEFAULT_GRANTS"]);

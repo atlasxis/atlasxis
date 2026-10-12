@@ -54,14 +54,34 @@ add("15 verifica tabela A, escreve tabela B", "MUST_ABSTAIN", H("POST", `const {
 add("16 parent-child (dono do pai modera filho)", "PROVE_CONTROLLED", H("POST", `const {commentId}=await params; ${admin} const {data:c}=await supabaseAdmin.from("comments").select("id,post_id").eq("id",commentId).maybeSingle(); if(!c) throw new Error("404"); const {data:post}=await supabaseAdmin.from("posts").select("id,user_id").eq("id",c.post_id).maybeSingle(); if(post?.user_id!==user.id) throw new Error("403"); await supabaseAdmin.from("comments").update({status:"removed"}).eq("id",commentId); return Response.json({ok:true});`));
 // 17. código não suportado
 add("17 código não suportado (wrapper)", "MUST_ABSTAIN", { files: { "route.ts": `export const GET = withAuth(async (req)=>{ const {data}=await supabaseAdmin.from("docs").select("*"); return Response.json({data}); });` }, entry: "route.ts" });
+// 18-23. identidade controlada pelo cliente: o atacante escolhe user.id e passa
+// na checagem de dono. Falso CONTROLLED encontrado na v1.0.3 (corrigido na 1.1.0).
+const gateId = (u) => `const {data:d}=await supabaseAdmin.from("docs").select("id,user_id").eq("id",id).maybeSingle(); if(d.user_id!==${u}) throw new Error("403"); await supabaseAdmin.from("docs").delete().eq("id",id); return Response.json({ok:true});`;
+add("18 user vindo do corpo", "MUST_ABSTAIN", H("DELETE", `const { user, id } = await request.json(); ${gateId("user.id")}`));
+add("19 session vinda do corpo", "MUST_ABSTAIN", H("DELETE", `const {id}=await params; const { session } = await request.json(); ${gateId("session.user.id")}`));
+add("20 user montado com query param", "MUST_ABSTAIN", H("DELETE", `const {id}=await params; const user = { id: request.nextUrl.searchParams.get("uid") }; ${gateId("user.id")}`));
+add("21 user de cookie cru", "MUST_ABSTAIN", H("DELETE", `const {id}=await params; const user = { id: cookies().get("uid")?.value }; ${gateId("user.id")}`));
+add("22 self-scope com user do corpo", "MUST_ABSTAIN", H("GET", `const { user } = await request.json(); const {data}=await supabaseAdmin.from("docs").select("*").eq("user_id",user.id); return Response.json({data});`));
+add("23 controle: user de getUser()", "PROVE_CONTROLLED", H("DELETE", `const {id}=await params; const { data: { user } } = await supabase.auth.getUser(); ${gateId("user.id")}`));
+// 24. referência escolhida pelo cliente gravada junto com o dono (achado em código real)
+add("24 insert com campaign_id do cliente", "MUST_ABSTAIN", H("POST", `const { campaign_id, name } = await request.json(); await supabaseAdmin.from("maps").insert({ name, campaign_id, user_id: user.id }); return Response.json({ok:true});`));
+// 25-26. vários handlers no mesmo arquivo com clientes diferentes (achado em código real):
+// o GET usa o cliente do usuário e NÃO pode virar VULNERABLE por causa do admin do DELETE
+const MIXED = `export async function GET(request,{params}){ const {id}=await params; const supabase = createServerClient(); const {data}=await supabase.from("docs").select("*").eq("id",id); return Response.json({data}); }
+export async function DELETE(request,{params}){ const {id}=await params; const supabaseAdmin = createSupabaseAdminClient(); await supabaseAdmin.from("docs").delete().eq("id",id); return Response.json({ok:true}); }`;
+add("25 GET com cliente do usuário em arquivo misto", "MUST_ABSTAIN", { files: { "route.ts": MIXED }, entry: "route.ts", handler: "GET" });
+add("26 DELETE admin sem checagem em arquivo misto", "PROVE_VULNERABLE", { files: { "route.ts": MIXED }, entry: "route.ts", handler: "DELETE" });
+// 27. spread de dados do cliente junto com o dono (achado em código real): pode sobrescrever user_id
+add("27 insert { user_id, ...corpo }", "MUST_ABSTAIN", H("POST", `const body = await request.json(); await supabaseAdmin.from("invoices").insert({ user_id: user.id, ...body }); return Response.json({ok:true});`));
 
 let fail = 0, falseControl = 0, falseVuln = 0, integrity = 0;
-console.log("=== REPOSITÓRIO ADVERSARIAL (17 padrões) ===");
+console.log(`=== REPOSITÓRIO ADVERSARIAL (${CASES.length} padrões) ===`);
 for (const c of CASES) {
   const rls = c.sql ? { model: parseSqlCorpus(c.sql), declared: {}, options: {} } : {};
   const res = analyzeFileIR(c.files, c.entry, rls);
-  const d = res[0].decision;
-  for (const sd of res[0].sinkDecisions) if (validateDecision(sd).length) integrity++;
+  const h0 = c.handler ? res.find((h) => h.method === c.handler) : res[0];
+  for (const h of res) for (const sd of h.sinkDecisions) if (validateDecision(sd).length) integrity++;
+  const d = h0.decision;
   if (validateDecision(d).length) integrity++;
   const st = d.status;
   let ok;

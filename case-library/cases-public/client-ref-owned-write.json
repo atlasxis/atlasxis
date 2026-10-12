@@ -1,0 +1,49 @@
+{
+  "id": "client-ref-owned-write",
+  "title": "Referência escolhida pelo cliente gravada junto com o dono (correção de falso CONTROLLED da 1.0.3)",
+  "status": "CERTIFIED",
+  "origin": {
+    "project": "validação externa: 7 repositórios públicos de terceiros com server actions + Supabase (não nomeados aqui; registro no repositório do mantenedor)",
+    "location": "core/engine.mjs + core/extract.mjs",
+    "date": "2026-10-12"
+  },
+  "mechanism": "insert/update que grava user_id = user.id e também uma coluna *_id escolhida pelo cliente (direto ou via linha lida com filtro do cliente)",
+  "oracle_result": {
+    "status": "INSUFFICIENT_EVIDENCE",
+    "reasonCode": "INSUFFICIENT_CROSS_RESOURCE"
+  },
+  "ground_truth": {
+    "decision": "o registro pertence ao usuário, mas aponta para um recurso de outro (ex.: campanha alheia); o self-scope não prova a autorização sobre esse recurso",
+    "source": "construction",
+    "justification": "o registro pertence ao usuário, mas aponta para um recurso de outro (ex.: campanha alheia); o self-scope não prova a autorização sobre esse recurso"
+  },
+  "evidence": "Na 1.0.3 saía CONTROLLED_SELF_SCOPE. Achado em código real (campaign_id do argumento; id lido de convite por id do cliente; destinatário de conversa).",
+  "code_ref": "core/engine.mjs",
+  "fixtures": {
+    "positive": [
+      "core/fixtures/server-actions.mjs"
+    ],
+    "negative": [
+      "core/fixtures/server-actions.mjs"
+    ],
+    "adversarial": [
+      "core/harness/adversarial-repo.mjs",
+      "core/fixtures/server-actions.mjs"
+    ]
+  },
+  "regression": "core/harness/adversarial-repo.mjs (padrão 24) + core/fixtures/server-actions.mjs (SA7, SA8)",
+  "certification": {
+    "real_case": true,
+    "ground_truth": true,
+    "fixture_positive": true,
+    "fixture_negative": true,
+    "fixture_adversarial": true,
+    "regression_pass": true,
+    "mutation_pass": true,
+    "benchmark_pass": true,
+    "external_pass": true,
+    "no_false_control_increase": true
+  },
+  "human_validation": "Revisão manual pelo mantenedor no código real; auditoria cega independente PENDING.",
+  "notes": "Nunca vira VULNERABLE: a referência pode ser a uma tabela pública."
+}

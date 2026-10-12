@@ -1,0 +1,49 @@
+{
+  "id": "server-actions",
+  "title": "Server actions do Next.js (\"use server\") como endpoints analisados",
+  "status": "CERTIFIED",
+  "origin": {
+    "project": "padrão oficial do Next.js App Router + 7 repositórios públicos de terceiros com server actions + Supabase (não nomeados aqui; registro no repositório do mantenedor)",
+    "location": "core/extract.mjs (isServerActionFile, discoverServerActions, collectActionSources) + core/engine.mjs (analyzeActionFile)",
+    "date": "2026-10-12"
+  },
+  "mechanism": "arquivo cuja primeira instrução é \"use server\"; cada função async exportada é um endpoint; argumentos, membros de argumentos e campos de FormData são entrada do cliente; mesmo motor de provas das rotas",
+  "oracle_result": {
+    "status": "CONTROLLED|VULNERABLE|INSUFFICIENT_EVIDENCE|NOT_ANALYZED",
+    "reasonCode": "ver core/fixtures/server-actions.mjs"
+  },
+  "ground_truth": {
+    "decision": "por action (20 casos)",
+    "source": "construction",
+    "justification": "argumentos de uma action exportada vêm de quem chama; a identidade só vale se vier do servidor (auth()/supabase.auth.getUser()); provas de dono seguem a mesma semântica das rotas."
+  },
+  "evidence": "25 casos por construção (10 positivos, 5 negativos, 10 armadilhas): 0 falso controle, 0 falso vulnerável, integridade 0, mutações 13/13, determinismo 25/25. Validação externa: 7 repositórios públicos de terceiros com server actions + Supabase (não nomeados aqui; registro no repositório do mantenedor); 61 arquivos \"use server\", 205 decisões, integridade 0, 0 erros; revisão manual de todo CONTROLLED/VULNERABLE. A validação achou 3 classes de defeito (corrigidas antes da certificação) e um ReDoS na detecção.",
+  "code_ref": "core/extract.mjs",
+  "fixtures": {
+    "positive": [
+      "core/fixtures/server-actions.mjs",
+      "public-corpus/server-action-idor/src/app/notes/actions.ts"
+    ],
+    "negative": [
+      "core/fixtures/server-actions.mjs"
+    ],
+    "adversarial": [
+      "core/fixtures/server-actions.mjs"
+    ]
+  },
+  "regression": "core/harness/server-actions-suite.mjs (gate do CI público)",
+  "certification": {
+    "real_case": true,
+    "ground_truth": true,
+    "fixture_positive": true,
+    "fixture_negative": true,
+    "fixture_adversarial": true,
+    "regression_pass": true,
+    "mutation_pass": true,
+    "benchmark_pass": true,
+    "external_pass": true,
+    "no_false_control_increase": true
+  },
+  "human_validation": "—",
+  "notes": "Ligadas por padrão a partir da 1.1.0 (--no-server-actions desliga). Toda decisão carrega SERVER_ACTION_IS_PUBLIC_ENDPOINT."
+}

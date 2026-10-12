@@ -1,0 +1,50 @@
+{
+  "id": "rls-table-audit",
+  "title": "Auditoria de RLS por tabela (apps que chamam o Supabase direto do navegador)",
+  "status": "CERTIFIED",
+  "origin": {
+    "project": "caso público CVE-2025-48757 (tabelas Supabase lidas/escritas com a chave anon por RLS ausente ou insuficiente) + validação em SQL real não redistribuível",
+    "location": "core/rls-audit.mjs",
+    "date": "2026-10-12"
+  },
+  "mechanism": "tabela × papel (anon, authenticated) × operação: policies de dono, RLS sem policy permissiva, privilégio ausente (CONTROLLED); RLS comprovadamente desligado ou policy using(true) em UPDATE/DELETE, com privilégio provado e coluna de dono (VULNERABLE)",
+  "oracle_result": {
+    "status": "CONTROLLED|VULNERABLE|INSUFFICIENT_EVIDENCE",
+    "reasonCode": "ver core/fixtures/rls-audit.mjs"
+  },
+  "ground_truth": {
+    "decision": "por célula (46 casos)",
+    "source": "construction",
+    "justification": "semântica documentada do PostgreSQL/Supabase: policies permissivas combinam com OR e restritivas com AND; RLS ligado sem policy permissiva nega; sem privilégio nega; RLS desligado = o privilégio decide. Nunca derivado da saída do motor."
+  },
+  "evidence": "46 casos (19 positivos, 11 negativos, 16 armadilhas): 0 falso controle, 0 falso vulnerável, integridade 0, 35/35 mutações causais, 46/46 determinísticos. Validação em SQL real (2 corpora, 46 tabelas, 368 células): integridade 0 e revisão manual de todas as policies que sustentam CONTROLLED, sem falso controle.",
+  "code_ref": "core/rls-audit.mjs",
+  "fixtures": {
+    "positive": [
+      "core/fixtures/rls-audit.mjs",
+      "public-corpus/client-side-rls/supabase/migrations/20260101000000_init.sql"
+    ],
+    "negative": [
+      "core/fixtures/rls-audit.mjs"
+    ],
+    "adversarial": [
+      "core/fixtures/rls-audit.mjs",
+      "core/harness/rls-audit-suite.mjs"
+    ]
+  },
+  "regression": "core/harness/rls-audit-suite.mjs (gate do CI público)",
+  "certification": {
+    "real_case": true,
+    "ground_truth": true,
+    "fixture_positive": true,
+    "fixture_negative": true,
+    "fixture_adversarial": true,
+    "regression_pass": true,
+    "mutation_pass": true,
+    "benchmark_pass": true,
+    "external_pass": true,
+    "no_false_control_increase": true
+  },
+  "human_validation": "Revisão manual pelo mantenedor das decisões CONTROLLED no SQL real; auditoria cega independente PENDING.",
+  "notes": "Não presume os grants padrão do Supabase: o padrão mudou em 2026 (projetos novos desde 30/05/2026; tabelas novas de projetos existentes desde 30/10/2026). VULNERABLE exige GRANT explícito, dump completo (--schema-dump) ou --assume-default-grants declarado."
+}

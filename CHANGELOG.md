@@ -3,6 +3,54 @@
 Formato: [Keep a Changelog](https://keepachangelog.com/). Versões seguem a tag
 técnica do engine.
 
+## [1.1.0-public] — 2026-10-12
+
+### Corrigido — correções de segurança (leia se usa 1.0.0 a 1.0.3)
+Até a 1.0.3, o Atlasxis podia afirmar mais do que provava em quatro situações.
+Três foram encontradas ao validar o motor em código real de terceiros, e uma em
+revisão adversarial interna. Se você confiou num resultado da 1.0.x nesses
+padrões, rode de novo com a 1.1.0.
+
+- **Falso CONTROLLED com identidade vinda do cliente.** Uma rota que lia
+  `user`/`session` do corpo, da query, de um cookie cru ou de um objeto montado
+  com esses dados saía `CONTROLLED`, mas o atacante escolhia a própria
+  identidade. Agora: `INSUFFICIENT_IDENTITY_FROM_CLIENT`.
+- **Falso CONTROLLED com spread junto do dono.** `insert({ user_id: user.id,
+  ...dados })` saía `CONTROLLED`, mas o spread pode sobrescrever `user_id`.
+  Agora: `INSUFFICIENT_OWNER_OVERRIDABLE`.
+- **Falso CONTROLLED com referência escolhida pelo cliente.** Um registro do
+  usuário gravado com um `*_id` vindo do cliente (ex.: `campaign_id`) saía
+  `CONTROLLED`, embora apontasse para um recurso de outro. Agora:
+  `INSUFFICIENT_CROSS_RESOURCE`.
+- **Falso VULNERABLE em arquivos com vários handlers.** O tipo de cliente
+  Supabase era decidido pelo arquivo inteiro: um `supabaseAdmin` num handler
+  fazia os outros, que usavam o cliente do usuário, saírem `VULNERABLE`. Agora o
+  tipo é decidido por acesso.
+
+Regressões permanentes: padrões adversariais 18–27. Benchmark de 532 casos e
+corpus público: byte-idênticos. Em código real auditado (51 rotas, 87 sinks),
+só uma decisão mudou, para uma abstenção mais honesta.
+
+### Adicionado
+- **`atlasxis rls`**: auditoria de RLS por tabela × papel (`anon`,
+  `authenticated`) × operação, direto do SQL (migrações ou `--schema-dump`).
+  Cobre apps que chamam o Supabase direto do navegador. Não presume os grants
+  padrão do Supabase, que mudaram em 2026; `--assume-default-grants` declara o
+  padrão antigo como assumption. Certificado: 46 casos, 0 falso controle,
+  0 falso vulnerável, 35/35 mutações; validado em SQL real.
+- **Server actions** (arquivos `"use server"`), ligadas por padrão
+  (`--no-server-actions` desliga): mesmo motor de provas; argumentos e campos
+  de `FormData` são entrada do cliente. Certificado: 25 casos, 0 falso controle,
+  0 falso vulnerável, 13/13 mutações; validado em 7 projetos open source reais
+  (205 decisões, integridade 0, revisão manual completa).
+- 12 reason codes e 3 assumptions novos.
+- Fixtures públicas `client-side-rls` e `server-action-idor`.
+
+### Segurança operacional
+- A detecção de `"use server"` lê o topo do arquivo em tempo linear. Uma versão
+  anterior desta mesma release, nunca publicada, usava uma regex que travava em
+  arquivos inteiros de código comentado. Novo teste de regressão (15/15).
+
 ## [1.0.3-public] — 2026-10-12
 
 ### Mudado
