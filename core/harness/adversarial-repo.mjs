@@ -73,6 +73,14 @@ add("25 GET com cliente do usuário em arquivo misto", "MUST_ABSTAIN", { files: 
 add("26 DELETE admin sem checagem em arquivo misto", "PROVE_VULNERABLE", { files: { "route.ts": MIXED }, entry: "route.ts", handler: "DELETE" });
 // 27. spread de dados do cliente junto com o dono (achado em código real): pode sobrescrever user_id
 add("27 insert { user_id, ...corpo }", "MUST_ABSTAIN", H("POST", `const body = await request.json(); await supabaseAdmin.from("invoices").insert({ user_id: user.id, ...body }); return Response.json({ok:true});`));
+// 28-32. id do cliente + filtro de dono no MESMO sink (achado ao usar o Atlasxis como verificador de outro sistema):
+// a 1.1.0 ignorava o filtro user.id e dava VULNERABLE_NO_GATING — falso VULNERABLE.
+const authHelper = "const { supabaseAdmin, user } = await requireAuthenticatedUser(request);";
+add("28 leitura por conversation_id + user_id = user.id", "PROVE_CONTROLLED", H("GET", `const {id}=await params; ${authHelper} const {data}=await supabaseAdmin.from("messages").select("*").eq("conversation_id",id).eq("user_id",user.id); return Response.json({data});`));
+add("29 delete por id + user_id = user.id", "PROVE_CONTROLLED", H("DELETE", `const {id}=await params; ${authHelper} await supabaseAdmin.from("docs").delete().eq("id",id).eq("user_id",user.id); return Response.json({ok:true});`));
+add("30 filtro user.id em coluna fora da convenção", "MUST_ABSTAIN", H("GET", `const {id}=await params; ${authHelper} const {data}=await supabaseAdmin.from("messages").select("*").eq("conversation_id",id).eq("recipient",user.id); return Response.json({data});`));
+add("31 controle: mesmo sink sem filtro de dono", "PROVE_VULNERABLE", H("GET", `const {id}=await params; ${authHelper} const {data}=await supabaseAdmin.from("messages").select("*").eq("conversation_id",id); return Response.json({data});`));
+add("32 self-scope com user do corpo + id do cliente", "MUST_ABSTAIN", H("GET", `const {id}=await params; const { user } = await request.json(); const {data}=await supabaseAdmin.from("messages").select("*").eq("conversation_id",id).eq("user_id",user.id); return Response.json({data});`));
 
 let fail = 0, falseControl = 0, falseVuln = 0, integrity = 0;
 console.log(`=== REPOSITÓRIO ADVERSARIAL (${CASES.length} padrões) ===`);

@@ -13,7 +13,7 @@ _Gerado por `node release/public-metrics.mjs`. Fontes: benchmark sintético, mut
 | Mutation score | 62/62 (0 survivors) | mutações causais em fixtures CONTROLLED públicas |
 | Validação pública (mecanismos) | 8/8 | 8 mini-projetos sintéticos, ground truth por construção |
 | Proof Integrity (público) | 0 falhas | invariante executável em toda decisão |
-| Adversarial | fail=0 fc=0 fv=0 | 27 padrões projetados para induzir false-control |
+| Adversarial | fail=0 fc=0 fv=0 | 32 padrões projetados para induzir false-control |
 | Auditoria de RLS (`atlasxis rls`) | 46 casos, fail=0 fc=0 fv=0, mutações 35/35 | positivos, negativos e armadilhas por construção (semântica do PostgreSQL) |
 | Server actions | 25 casos, fail=0 fc=0 fv=0, mutações 13/13 | fixtures por construção + validação em 7 projetos open source reais (integridade 0) |
 | Segurança operacional | 15/15 | projeto malicioso não compromete o analisador |

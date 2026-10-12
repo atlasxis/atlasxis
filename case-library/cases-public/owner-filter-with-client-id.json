@@ -1,0 +1,48 @@
+{
+  "id": "owner-filter-with-client-id",
+  "title": "Id do cliente + filtro de dono no mesmo acesso (correção de falso VULNERABLE da 1.1.0)",
+  "status": "CANDIDATE",
+  "origin": {
+    "project": "integração do Atlasxis como verificador local de um orquestrador de missões (fixture sintética no formato Next.js App Router)",
+    "location": "core/engine.mjs (decisão por sink, antes de VULNERABLE_NO_GATING_SERVICE_ROLE)",
+    "date": "2026-10-12"
+  },
+  "mechanism": "o acesso via service_role filtra por um id escolhido pelo cliente (ex.: conversation_id) E por uma coluna de dono igual a user.id; a 1.1.0 olhava só o id do cliente e ignorava o filtro de dono",
+  "oracle_result": {
+    "status": "CONTROLLED",
+    "reasonCode": "CONTROLLED_SELF_SCOPE"
+  },
+  "ground_truth": {
+    "decision": "coluna de dono = user.id no próprio sink → CONTROLLED_SELF_SCOPE; user.id em coluna fora da convenção → abster; o mesmo sink sem o filtro → VULNERABLE",
+    "source": "construction",
+    "justification": "com dono = user.id no próprio filtro, o id do cliente só estreita um conjunto que já pertence ao usuário; nenhuma linha de outro usuário é lida, alterada ou apagada."
+  },
+  "evidence": "Na 1.1.0 os padrões 28, 29 e 30 saíam VULNERABLE_NO_GATING_SERVICE_ROLE (3 falsos VULNERABLE, confirmados rodando o motor antigo). Depois da correção: 28 e 29 CONTROLLED_SELF_SCOPE, 30 INSUFFICIENT_UNRESOLVED_GATING; o controle 31 (sem filtro de dono) segue VULNERABLE e o 32 (user vindo do corpo) segue abstendo. Benchmark 532/532, mutações 130/130; em código real (87 sinks) 0 decisões mudaram.",
+  "code_ref": "core/engine.mjs",
+  "fixtures": {
+    "positive": [
+      "core/harness/adversarial-repo.mjs"
+    ],
+    "negative": [
+      "core/harness/adversarial-repo.mjs"
+    ],
+    "adversarial": [
+      "core/harness/adversarial-repo.mjs"
+    ]
+  },
+  "regression": "core/harness/adversarial-repo.mjs (padrões 28-32)",
+  "certification": {
+    "real_case": false,
+    "ground_truth": true,
+    "fixture_positive": true,
+    "fixture_negative": true,
+    "fixture_adversarial": true,
+    "regression_pass": true,
+    "mutation_pass": true,
+    "benchmark_pass": true,
+    "external_pass": true,
+    "no_false_control_increase": true
+  },
+  "human_validation": "Variantes construídas e revisadas pelo mantenedor; auditoria cega independente PENDING.",
+  "notes": "CANDIDATE, não CERTIFIED: o padrão ainda não foi observado em código real de terceiros. Insert/upsert continuam fora da correção: gravar com dono = user.id num recurso alheio segue sem prova. Afeta resultados VULNERABLE das versões 1.0.0 a 1.1.0."
+}

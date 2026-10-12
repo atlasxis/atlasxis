@@ -138,6 +138,20 @@ export function analyzeHandlerIR(fn, sf, code, path, files, rls, opts = {}) {
     return p;
   };
 
+  const selfScope = (sink, sinkInfo, D) => {
+    const proof = ProofChain({
+      mechanism: "self-scope",
+      source: Source("server-identity", "user.id"),
+      resource: { table: sink.table, idExpr: "user.id" },
+      authorization: Authorization({ kind: "owner-filter", declared: { table: sink.table } }),
+      guard: Guard({ kind: "sink-filter", pos: sink.pos, rejects: true }),
+      identity: IdentityProof({ verified: { table: sink.table, idExpr: "user.id" }, sinkBound: { idExpr: "user.id" }, same: true, method: "sink-binds-owner", witness: [{ kind: "sink-filter", pos: sink.pos }] }),
+      sink: sinkInfo,
+      steps: [{ kind: "owner-bound-sink", ...sinkInfo }],
+    });
+    return D(STATUS.CONTROLLED, REASON.CONTROLLED_SELF_SCOPE, proof, [A.SERVER_IDENTITY, A.OWNER_COLUMN_CONVENTION, A.OWNERSHIP_GRANTS_ACCESS]);
+  };
+
   const decideSink = (sink) => {
     // tipo de cliente do PRÓPRIO sink (não do arquivo inteiro)
     const client = sinkClientKind(sink, fn, sf, fileClient);
@@ -317,6 +331,19 @@ export function analyzeHandlerIR(fn, sf, code, path, files, rls, opts = {}) {
           : !resolveFn(callee(guardishCall), files, sf) ? REASON.INSUFFICIENT_GUARD_UNRESOLVED : REASON.INSUFFICIENT_RESOURCE_IDENTITY;
         return D(STATUS.INSUFFICIENT, code_, null, [], [`guard chama ${callee(guardishCall)}(...) referenciando user, não provado vácuo nem autorizador — controle compensatório não analisável`]);
       }
+      // trava anti-FP: o PRÓPRIO sink também filtra pela identidade do chamador
+      // (`.eq("conversation_id", cid).eq("user_id", user.id)`). O id do cliente
+      // só estreita um conjunto que já é do usuário. Coluna de dono → mesma
+      // prova do self-scope; outra coluna → abster. Insert/upsert não filtram
+      // linhas: gravar com dono = user.id num recurso alheio segue sem prova.
+      if (!/insert|upsert/.test(sink.op)) {
+        const bound = (sink.filters || []).filter((f) => /\buser\.id\b/.test(f.val));
+        if (bound.some((f) => OWNER.has(f.col))) return selfScope(sink, sinkInfo, D);
+        if (bound.length)
+          return D(STATUS.INSUFFICIENT, REASON.INSUFFICIENT_UNRESOLVED_GATING, null, [], [
+            `sink filtra ${bound.map((f) => f.col).join(",")} = user.id, coluna fora da convenção de dono — escopo do usuário não provado`,
+          ]);
+      }
       if (liveCmp || pubFilter || roleChk) {
         const code = crossProven() ? REASON.INSUFFICIENT_CROSS_RESOURCE : REASON.INSUFFICIENT_UNRESOLVED_GATING;
         return D(STATUS.INSUFFICIENT, code, null, [], [
@@ -397,19 +424,7 @@ export function analyzeHandlerIR(fn, sf, code, path, files, rls, opts = {}) {
         return D(STATUS.INSUFFICIENT, REASON.INSUFFICIENT_CROSS_RESOURCE, null, [],
           clientRefs.map((f) => `${f.key} = ${f.val}: o registro do usuário referencia um recurso escolhido pelo cliente; a autorização sobre esse recurso não foi provada`));
     }
-    if (selfOwned(sink)) {
-      const proof = ProofChain({
-        mechanism: "self-scope",
-        source: Source("server-identity", "user.id"),
-        resource: { table: sink.table, idExpr: "user.id" },
-        authorization: Authorization({ kind: "owner-filter", declared: { table: sink.table } }),
-        guard: Guard({ kind: "sink-filter", pos: sink.pos, rejects: true }),
-        identity: IdentityProof({ verified: { table: sink.table, idExpr: "user.id" }, sinkBound: { idExpr: "user.id" }, same: true, method: "sink-binds-owner", witness: [{ kind: "sink-filter", pos: sink.pos }] }),
-        sink: sinkInfo,
-        steps: [{ kind: "owner-bound-sink", ...sinkInfo }],
-      });
-      return D(STATUS.CONTROLLED, REASON.CONTROLLED_SELF_SCOPE, proof, [A.SERVER_IDENTITY, A.OWNER_COLUMN_CONVENTION, A.OWNERSHIP_GRANTS_ACCESS]);
-    }
+    if (selfOwned(sink)) return selfScope(sink, sinkInfo, D);
     return D(STATUS.NOT_ANALYZED, REASON.NOT_ANALYZED_NO_CLIENT_RESOURCE_ID, null, [], [], false);
   };
 

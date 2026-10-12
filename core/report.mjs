@@ -1,6 +1,10 @@
 // Atlasxis — geração de relatório por sink (FASE 27).
 // Formatos: json | markdown | sarif. Determinístico (sem timestamps/random).
 
+import { readFileSync } from "node:fs";
+
+const VERSION = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")).version;
+
 const CONF = {
   CONTROLLED: "PROVEN", VULNERABLE: "DEMONSTRATED", INSUFFICIENT_EVIDENCE: "UNPROVEN",
   NOT_ANALYZED: "UNMODELED", OUT_OF_SCOPE_PROVEN: "OUT_OF_SCOPE", OUT_OF_SCOPE_UNVERIFIED: "SUSPECTED_OOS",
@@ -91,6 +95,6 @@ export function toSARIF(report) {
   }
   return JSON.stringify({
     $schema: "https://json.schemastore.org/sarif-2.1.0.json", version: "2.1.0",
-    runs: [{ tool: { driver: { name: "Atlasxis", informationUri: "https://github.com/atlasxis/atlasxis", version: "1.1.0", rules: Object.values(rules) } }, results }],
+    runs: [{ tool: { driver: { name: "Atlasxis", informationUri: "https://github.com/atlasxis/atlasxis", version: VERSION, rules: Object.values(rules) } }, results }],
   }, null, 2);
 }

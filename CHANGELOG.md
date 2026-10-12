@@ -3,6 +3,22 @@
 Formato: [Keep a Changelog](https://keepachangelog.com/). Versões seguem a tag
 técnica do engine.
 
+## [1.1.1-public] — 2026-10-12
+
+### Corrigido — falso VULNERABLE (leia se usa 1.0.0 a 1.1.0)
+- **Id do cliente + filtro de dono no mesmo acesso.** Um acesso via
+  `service_role` como `.eq("conversation_id", id).eq("user_id", user.id)` saía
+  `VULNERABLE_NO_GATING_SERVICE_ROLE`: o motor via o id do cliente e ignorava o
+  filtro de dono no mesmo acesso. Esse id só estreita linhas que já são do
+  usuário. Agora: `CONTROLLED_SELF_SCOPE` quando a coluna segue a convenção de
+  dono, e abstenção (`INSUFFICIENT_UNRESOLVED_GATING`) com `user.id` em outra
+  coluna. Insert/upsert não mudam.
+- O SARIF passa a informar a versão real do pacote (estava fixo em 1.1.0).
+
+Regressões permanentes: padrões adversariais 28–32. Benchmark de 532 casos,
+mutações (130/130), RLS e server actions inalterados; em código real auditado
+(87 sinks), nenhuma decisão mudou.
+
 ## [1.1.0-public] — 2026-10-12
 
 ### Corrigido — correções de segurança (leia se usa 1.0.0 a 1.0.3)
