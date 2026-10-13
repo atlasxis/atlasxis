@@ -30,6 +30,7 @@ import { join, relative, resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { analyzeFileIR } from "./engine.mjs";
 import { isServerActionFile } from "./extract.mjs";
+import { analyzeExpressProject, isExpressProject } from "./express.mjs";
 import { parseSqlCorpus } from "./rls.mjs";
 import { buildReport, toJSON, toMarkdown, toSARIF } from "./report.mjs";
 import { EXPLANATIONS } from "./explanations.mjs";
@@ -88,7 +89,14 @@ function loadProject(root, state) {
   // server actions: arquivos cuja primeira instrução é "use server"
   const routeSet = new Set(routes);
   const actions = Object.keys(files).filter((p) => !routeSet.has(p) && isServerActionFile(files[p]));
-  return { files, routes, actions };
+  // Express + Prisma: o schema dá a posse dos modelos (docs/EXPRESS-PRISMA.md)
+  const schemas = {};
+  for (const p of walk(root, (x) => x.endsWith(".prisma"), state)) {
+    const rel = relative(root, p);
+    if (rel.startsWith("..")) continue;
+    try { schemas[rel] = readFileSync(p, "utf8"); } catch {}
+  }
+  return { files, routes, actions, schemas };
 }
 
 function loadRls(root, rlsDir, state) {
@@ -104,9 +112,14 @@ function loadRls(root, rlsDir, state) {
 function analyzeProject(root, opts) {
   const state = newWalkState();
   const deadline = Date.now() + (opts.timeoutMs || LIMITS.timeoutMs);
-  const { files, routes, actions } = loadProject(root, state);
+  const { files, routes, actions, schemas } = loadProject(root, state);
   const rls = loadRls(root, opts.rls, state);
   const out = [];
+  let expressRoutes = 0;
+  if (opts.express !== false && isExpressProject(files)) {
+    const analyzed = analyzeExpressProject(files, schemas);
+    for (const f of analyzed) { out.push(f); expressRoutes += f.handlers.length; }
+  }
   // server actions: certificadas (validação externa em 7 repositórios reais).
   // Ligadas por padrão; --no-server-actions desliga.
   const actionUnits = opts.serverActions !== false ? actions.sort().map((p) => [p, { kind: "action" }]) : [];
@@ -118,7 +131,7 @@ function analyzeProject(root, opts) {
     catch (e) { handlers = [{ method: "?", client: "unknown", sinkDecisions: [], decision: { status: "NOT_ANALYZED", reasonCode: "NOT_ANALYZED_PARSE_ERROR", assumptions: [], unknowns: [String(e.message).slice(0, 100)] } }]; }
     out.push({ path: rp, handlers });
   }
-  return { files, routes, actions: opts.serverActions !== false ? actions : [], actionsFound: actions.length, rls, analyzed: out, state };
+  return { files, routes, actions: opts.serverActions !== false ? actions : [], actionsFound: actions.length, rls, analyzed: out, state, expressRoutes, prismaSchema: Object.keys(schemas).length > 0 };
 }
 
 // ---------------- sanitização de saída ----------------
@@ -155,15 +168,15 @@ function lineOf(content, pos) {
 // ---------------- comandos ----------------
 function cmdScan(rootArg, opts) {
   const root = resolveRoot(rootArg);
-  const { analyzed, routes, actions, actionsFound, rls, state } = analyzeProject(root, opts);
+  const { analyzed, routes, actions, actionsFound, rls, state, expressRoutes, prismaSchema } = analyzeProject(root, opts);
   const report = buildReport(analyzed);
   report.meta = {
     engine: `atlasxis ${PKG.version}`, root: relative(process.cwd(), root) || ".",
-    routes: routes.length, serverActionFiles: actions.length, rlsModel: !!rls.model,
+    routes: routes.length, serverActionFiles: actions.length, expressRoutes, prismaSchema, rlsModel: !!rls.model,
     ...(actionsFound && opts.serverActions === false ? { serverActionsSkipped: `${actionsFound} arquivo(s) "use server" encontrados e NÃO analisados (--no-server-actions)` } : {}),
     filesRead: state.files, symlinksSkipped: state.symlinksSkipped, oversizedSkipped: state.oversizedSkipped,
   };
-  if (routes.length === 0 && actions.length === 0) report.meta.note = "0 rotas e 0 arquivos de server actions descobertos — nenhum handler no escopo de descoberta (app/api/**/route.ts[x], src/app/api/**, pages/api/**, arquivos \"use server\")";
+  if (routes.length === 0 && actions.length === 0 && !expressRoutes) report.meta.note = "0 rotas e 0 arquivos de server actions descobertos — nenhum handler no escopo de descoberta (app/api/**/route.ts[x], src/app/api/**, pages/api/**, arquivos \"use server\")";
   const fmt = opts.ci ? "json" : (opts.format || "markdown");
   emit(fmt === "json" ? toJSON(report) : fmt === "sarif" ? toSARIF(report) : toMarkdown(report));
   emit("\n");
@@ -192,7 +205,8 @@ function cmdReport(rootArg, opts) {
     const units = h.sinkDecisions.length ? h.sinkDecisions : [h.decision];
     for (const d of units) {
       const pos = d.sink?.pos ?? d.proof?.sink?.pos ?? null;
-      (buckets[d.status] || (buckets[d.status] = [])).push({ file: f.path, method: h.method, client: h.client, d, line: lineOf(files[f.path], pos) });
+      const at = d.sink?.file || f.path;
+      (buckets[d.status] || (buckets[d.status] = [])).push({ file: at, method: h.method, client: h.client, d, line: lineOf(files[at], pos) });
     }
   }
   for (const status of order) {
@@ -338,6 +352,7 @@ function parseArgs(argv) {
     else if (argv[i] === "--assume-default-grants") opts.assumeDefaultGrants = true;
     else if (argv[i] === "--server-actions") opts.serverActions = true;
     else if (argv[i] === "--no-server-actions") opts.serverActions = false;
+    else if (argv[i] === "--no-express") opts.express = false;
     else if (argv[i] === "--timeout") opts.timeoutMs = Math.max(1, Math.floor((Number(argv[++i]) || 0) * 1000));
     else if (argv[i].startsWith("--")) { process.stderr.write(`erro: flag desconhecida: ${argv[i]}\n`); process.exit(1); }
     else pos.push(argv[i]);

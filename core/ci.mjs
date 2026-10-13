@@ -88,6 +88,13 @@ const saMut = sa.out.match(/mutações causais: (\d+)\/(\d+)/);
 add("server actions (certificação)", sa.ok && saM && saM.slice(2).every((x) => x === "0"),
   saM ? `${saM[1]} casos, fc/fv 0/0, mutações ${saMut ? saMut[1] + "/" + saMut[2] : "?"}` : "ver saída");
 
+// Express + Prisma: certificação autocontida (docs/EXPRESS-PRISMA.md)
+const ex = run("node", ["express-suite.mjs"], join(root, "core/harness"));
+const exM = ex.out.match(/express: cases=(\d+) fail=(\d+) false-control=(\d+) false-vuln=(\d+) integrity=(\d+) survivors=(\d+)/);
+const exMut = ex.out.match(/mutações causais: (\d+)\/(\d+)/);
+add("Express + Prisma (certificação)", ex.ok && exM && exM.slice(2).every((x) => x === "0"),
+  exM ? `${exM[1]} casos, fc/fv 0/0, mutações ${exMut ? exMut[1] + "/" + exMut[2] : "?"}` : "ver saída");
+
 // segurança operacional: projeto malicioso não compromete o analisador
 const ops = run("node", ["operational-security.mjs"], join(root, "core/harness"));
 const opsM = ops.out.match(/opsec: pass=(\d+) fail=(\d+)/);

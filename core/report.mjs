@@ -18,6 +18,7 @@ export function buildReport(files) {
     for (const d of units) {
       findings.push({
         path: f.path, method: h.method, client: h.client,
+        ...(d.sink?.file && d.sink.file !== f.path ? { sinkFile: d.sink.file } : {}),
         resource: d.sink?.table ?? d.proof?.sink?.table ?? null,
         operation: d.sink?.op ?? d.proof?.sink?.op ?? null,
         decision: d.status, confidence: CONF[d.status] || d.status,

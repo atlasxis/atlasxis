@@ -3,6 +3,25 @@
 Formato: [Keep a Changelog](https://keepachangelog.com/). Versões seguem a tag
 técnica do engine.
 
+## [1.3.0-public] — 2026-10-13
+
+### Adicionado (experimental)
+- **Express + Prisma.** `atlasxis scan` reconhece projetos Express e prova, por acesso Prisma, se há
+  autorização: descobre rotas e cadeias de middleware (inclusive montagens entre arquivos), segue o
+  handler por controller → service → repositório (`this.db`, `tx` de `$transaction`, singletons de
+  classe, `asyncHandler`) e decide com o mesmo IR e as mesmas invariantes do motor Supabase.
+  Como Prisma não tem RLS, VULNERABLE (`VULNERABLE_NO_OWNERSHIP_CHECK`) exige rota autenticada por
+  middleware provado, id escolhido pelo cliente, posse do modelo provada pelo `schema.prisma` e
+  ausência de qualquer checagem no caminho; rota só de admin sai `OOS_PROVEN_ROLE_MIDDLEWARE`; rota
+  sem autenticação sai `INSUFFICIENT_UNAUTHENTICATED_ROUTE`. `--no-express` desliga.
+- Certificação própria (`core/harness/express-suite.mjs`): 96 casos, incluindo 66 ataques de três
+  rodadas de revisão adversarial; 0 falso controle, 0 falso vulnerável. Limites em
+  `docs/EXPRESS-PRISMA.md`.
+- Em código real (390 rotas): 169 acessos provados CONTROLLED (amostra conferida à mão: 0 falsos),
+  0 VULNERABLE, 651 rotas só de admin reconhecidas.
+
+O motor Supabase/Next.js não mudou: benchmark, mutações, RLS e server actions idênticos.
+
 ## [1.2.0-public] — 2026-10-13
 
 ### Adicionado

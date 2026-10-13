@@ -24,6 +24,26 @@ export const ASSUMPTION = Object.freeze({
     id: "CLIENT_KIND_BY_IMPORTED_DEFINITION",
     text: "o tipo do client Supabase veio da definição exportada em outro arquivo do projeto (import resolvido sem ambiguidade): chave service_role → service_role; createServerClient/createRouteHandlerClient → authenticated; ambas ou nenhuma → desconhecido",
   },
+  EXPRESS_CHAIN_STATIC: {
+    id: "EXPRESS_CHAIN_STATIC",
+    text: "a cadeia de middleware da rota Express é a registrada estaticamente (app.use/router.use/rota), na ordem do código; middleware adicionado em tempo de execução não é visto",
+  },
+  WRAPPER_PASSES_THROUGH: {
+    id: "WRAPPER_PASSES_THROUGH",
+    text: "um wrapper de handler (ex.: asyncHandler(fn)) executa a função recebida com os mesmos req/res, sem alterar a autorização",
+  },
+  OWNER_FIELD_BOUND_TO_IDENTITY: {
+    id: "OWNER_FIELD_BOUND_TO_IDENTITY",
+    text: "um campo do filtro Prisma ligado à identidade verificada do principal restringe o acesso aos registros desse principal",
+  },
+  SCHEMA_RELATION_IS_OWNERSHIP: {
+    id: "SCHEMA_RELATION_IS_OWNERSHIP",
+    text: "uma relação (chave estrangeira) do modelo para o modelo do principal no schema Prisma indica que o registro pertence a um principal desse tipo",
+  },
+  PRINCIPAL_MODEL_BY_NAME: {
+    id: "PRINCIPAL_MODEL_BY_NAME",
+    text: "o modelo Prisma do principal foi inferido pelo nome do campo de identidade (req.professional ↔ Professional), não por uma leitura no middleware",
+  },
   SERVICE_ROLE_BYPASSES_RLS: {
     id: "SERVICE_ROLE_BYPASSES_RLS",
     text: "um client service_role bypassa RLS (semântica documentada do Supabase), logo a autorização precisa existir no código da aplicação",

@@ -67,6 +67,12 @@ export const EXPLANATIONS = Object.freeze({
     proven: "Fonte controlável → recurso → sink service_role; ausência comprovada de qualquer verificação que rejeite.",
     not_proven: "Exploração em runtime (a prova é estrutural, não um exploit executado).",
   },
+  VULNERABLE_NO_OWNERSHIP_CHECK: {
+    status: "VULNERABLE",
+    meaning: "Rota Express autenticada acessa via Prisma um registro escolhido pelo cliente, de um modelo que o schema liga ao tipo do principal, sem nenhuma checagem de dono antes do acesso.",
+    proven: "Middleware de autenticação provado → id do cliente → acesso Prisma; relação do modelo com o principal no schema; ausência de filtro de dono, gate dominante, papel e chamadas não resolvidas no caminho.",
+    not_proven: "Exploração em runtime; regras de negócio fora do código analisado (ex.: o principal pode ver registros de outros por desenho).",
+  },
   VULNERABLE_RLS_DISABLED_DEFAULT_GRANTS: {
     status: "VULNERABLE",
     meaning: "RLS desabilitada na tabela com grants default do Supabase: qualquer authenticated lê/escreve linhas de terceiros.",
@@ -135,6 +141,12 @@ export const EXPLANATIONS = Object.freeze({
     meaning: "Não foi possível resolver estruturalmente um alias/expressão de id até a fonte.",
     proven: "O caminho sintático até o ponto de perda.",
     not_proven: "Que o id verificado e o id do sink são o mesmo valor.",
+  },
+  INSUFFICIENT_UNAUTHENTICATED_ROUTE: {
+    status: "INSUFFICIENT_EVIDENCE",
+    meaning: "Rota Express sem middleware de autenticação provado acessa um registro escolhido pelo cliente.",
+    proven: "A cadeia estática da rota não contém middleware que verifique token e rejeite sem ele.",
+    not_proven: "Se o recurso deveria ser público (catálogo) ou protegido — o código não diz.",
   },
   INSUFFICIENT_TRANSITIVE_OWNERSHIP: {
     status: "INSUFFICIENT_EVIDENCE",
@@ -248,6 +260,12 @@ export const EXPLANATIONS = Object.freeze({
   },
 
   // ---- OUT_OF_SCOPE ----
+  OOS_PROVEN_ROLE_MIDDLEWARE: {
+    status: "OUT_OF_SCOPE_PROVEN",
+    meaning: "Rota Express acessível só a um principal administrativo, por middleware de papel que rejeita os demais.",
+    proven: "Middleware de autenticação e middleware de papel provados na cadeia estática da rota.",
+    not_proven: "Que o papel administrativo deva de fato ter acesso a todos os registros (assumption ADMIN_ROLE_GRANTS_ACCESS).",
+  },
   OOS_PROVEN_ADMIN_HELPER: {
     status: "OUT_OF_SCOPE_PROVEN",
     meaning: "Handler provadamente restrito a admin via helper estrutural; autorização por dono não se aplica.",
