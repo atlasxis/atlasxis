@@ -1,6 +1,6 @@
 {
   "name": "atlasxis",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "Authorization proof engine for Next.js + Supabase APIs. Proves, per data sink, whether there is structural evidence of authorization — and says so when it can't. Never claims your app is secure.",
   "type": "module",
   "license": "MIT",

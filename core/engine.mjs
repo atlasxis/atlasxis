@@ -154,12 +154,15 @@ export function analyzeHandlerIR(fn, sf, code, path, files, rls, opts = {}) {
 
   const decideSink = (sink) => {
     // tipo de cliente do PRÓPRIO sink (não do arquivo inteiro)
-    const client = sinkClientKind(sink, fn, sf, fileClient);
+    const prov = {};
+    const client = sinkClientKind(sink, fn, sf, fileClient, files, prov);
     const rids = clientRids(sink);
     const sinkInfo = { table: sink.table, op: sink.op, pos: sink.pos };
+    // tipo do client vindo de outro arquivo é uma premissa a mais, sempre declarada
+    const withClientProvenance = (assumptions) => (prov.via && assumptions.includes(A.CLIENT_KIND_BY_API_NAME) ? [...assumptions, A.CLIENT_KIND_BY_IMPORTED_DEFINITION] : assumptions);
     const D = (status, reasonCode, proof, assumptions, unknowns = [], applicable = true) => ({
       applicable,
-      decision: mkDecision({ unit: "sink", method, path, status, reasonCode, proof, assumptions: assumptionRefs(assumptions), unknowns, sink: sinkInfo }),
+      decision: mkDecision({ unit: "sink", method, path, status, reasonCode, proof, assumptions: assumptionRefs(withClientProvenance(assumptions)), unknowns, sink: sinkInfo }),
     });
 
     if (rids.length) {

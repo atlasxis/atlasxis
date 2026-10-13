@@ -239,15 +239,76 @@ function declOf(name, fn, sf, beforePos) {
     for (const d of st.declarationList.declarations) if (ts.isIdentifier(d.name) && d.name.text === name) return { kind: "var", init: d.initializer || null };
   return null;
 }
-export function sinkClientKind(sink, fn, sf, fileKind) {
+// `prov.via` registra quando o tipo veio de uma definição importada, para a
+// decisão declarar CLIENT_KIND_BY_IMPORTED_DEFINITION.
+export function sinkClientKind(sink, fn, sf, fileKind, files = null, prov = {}) {
   const root = receiverRoot(sink.node);
   if (!root) return fileKind;
   const byName = clientKind(root.text);
   const decl = declOf(root.text, fn, sf, sink.pos);
-  if (!decl) return byName !== "unknown" ? byName : fileKind;     // global livre: comportamento anterior
+  const imported = (name) => { const k = importedClientKind(name, sf, files); if (k !== "unknown") prov.via = "imported-definition"; return k; };
+  if (!decl) {
+    if (byName !== "unknown") return byName;
+    const k = imported(root.text);                                 // `import { adminDb } from "@/lib/db"`
+    return k !== "unknown" ? k : fileKind;                         // global livre: comportamento anterior
+  }
   if (decl.kind === "param") return byName;                        // cliente recebido por parâmetro
   const byInit = decl.init ? clientKind(decl.init.getText(sf)) : "unknown";
-  return byInit !== "unknown" ? byInit : byName;
+  if (byInit !== "unknown") return byInit;
+  if (byName !== "unknown") return byName;
+  // `const supabase = await createClient()` com createClient importado de outro arquivo
+  const callee = decl.init ? receiverCallee(decl.init) : null;
+  return callee ? imported(callee) : byName;
+}
+
+function receiverCallee(init) {
+  let n = init;
+  while (n && (ts.isAwaitExpression(n) || ts.isParenthesizedExpression(n) || ts.isNonNullExpression(n))) n = n.expression;
+  return n && ts.isCallExpression(n) && ts.isIdentifier(n.expression) ? n.expression.text : null;
+}
+
+// Resolve um nome importado no conjunto de arquivos e classifica a definição
+// exportada (mais as funções do mesmo arquivo que ela chama). FAIL-CLOSED: import
+// que casa com mais de um arquivo, alvo ausente, ou definição que mistura admin e
+// usuário → "unknown".
+export function importedClientKind(name, sf, files) {
+  if (!files || !sf) return "unknown";
+  for (const imp of findAll(sf, ts.isImportDeclaration)) {
+    const named = imp.importClause?.namedBindings;
+    if (!named || !ts.isNamedImports(named)) continue;
+    const el = named.elements.find((e) => e.name.text === name);
+    if (!el) continue;
+    const spec = ts.isStringLiteral(imp.moduleSpecifier) ? imp.moduleSpecifier.text : "";
+    if (!/^(\.|[@~]\/)/.test(spec)) return "unknown";             // pacote externo
+    const suffix = spec.replace(/^[@~]\//, "").replace(/^(\.\.?\/)+/, "");
+    const cands = Object.keys(files).filter((p) => [".ts", ".tsx", ".js", ".mjs", "/index.ts", "/index.js"].some((ext) => p === suffix + ext || p.endsWith("/" + suffix + ext)));
+    if (cands.length !== 1) return "unknown";
+    const def = exportedDefinitionText(files[cands[0]], (el.propertyName || el.name).text);
+    return def ? kindOfDefinition(def) : "unknown";
+  }
+  return "unknown";
+}
+
+function exportedDefinitionText(code, name) {
+  const dsf = parse(code);
+  const exported = (n) => (ts.getCombinedModifierFlags(n) & ts.ModifierFlags.Export) !== 0;
+  let node = null;
+  for (const st of dsf.statements) {
+    if (ts.isFunctionDeclaration(st) && st.name?.text === name && exported(st)) node = st;
+    if (ts.isVariableStatement(st) && exported(st)) for (const d of st.declarationList.declarations) if (ts.isIdentifier(d.name) && d.name.text === name) node = d;
+  }
+  if (!node) return null;
+  const helpers = findAll(node, (n) => ts.isCallExpression(n) && ts.isIdentifier(n.expression)).map((c) => c.expression.text);
+  const helperTexts = [...new Set(helpers)].map((h) => findFnIn(code, "", h)).filter(Boolean).map((r) => r.node.getText(r.sf));
+  return [node.getText(dsf), ...helperTexts].join("\n");
+}
+
+function kindOfDefinition(text) {
+  const admin = /SERVICE_ROLE|service_role|supabaseAdmin|createSupabaseAdminClient/.test(text);
+  const user = /createServerClient|createRouteHandlerClient|supabaseAuth/.test(text);
+  if (admin && !user) return "service_role";
+  if (user && !admin) return "authenticated";
+  return "unknown";
 }
 
 export function clientKind(code) {

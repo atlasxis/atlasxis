@@ -20,6 +20,10 @@ export const ASSUMPTION = Object.freeze({
     id: "CLIENT_KIND_BY_API_NAME",
     text: "o tipo do client Supabase é inferido por nomes de API/variável convencionais (service_role, createSupabaseAdminClient, supabaseAdmin, createServerClient, createRouteHandlerClient)",
   },
+  CLIENT_KIND_BY_IMPORTED_DEFINITION: {
+    id: "CLIENT_KIND_BY_IMPORTED_DEFINITION",
+    text: "o tipo do client Supabase veio da definição exportada em outro arquivo do projeto (import resolvido sem ambiguidade): chave service_role → service_role; createServerClient/createRouteHandlerClient → authenticated; ambas ou nenhuma → desconhecido",
+  },
   SERVICE_ROLE_BYPASSES_RLS: {
     id: "SERVICE_ROLE_BYPASSES_RLS",
     text: "um client service_role bypassa RLS (semântica documentada do Supabase), logo a autorização precisa existir no código da aplicação",

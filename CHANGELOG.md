@@ -3,6 +3,24 @@
 Formato: [Keep a Changelog](https://keepachangelog.com/). Versões seguem a tag
 técnica do engine.
 
+## [1.2.0-public] — 2026-10-13
+
+### Adicionado
+- **Client Supabase definido em outro arquivo.** `import { adminDb } from "@/lib/db"`
+  e `const supabase = await createClient()` (com `createClient` importado) agora são
+  classificados pela definição exportada no próprio projeto: chave `service_role` →
+  `service_role`; `createServerClient`/`createRouteHandlerClient` → `authenticated`.
+  Import que casa com mais de um arquivo, alvo fora do conjunto analisado ou
+  definição que mistura admin e usuário continuam desconhecidos (fail-closed). Toda
+  decisão que depende disso declara a nova assumption
+  `CLIENT_KIND_BY_IMPORTED_DEFINITION`.
+- Efeito: uma IDOR real via client admin importado, que antes saía
+  `INSUFFICIENT_RLS_UNKNOWN`, passa a ser provada `VULNERABLE_NO_GATING_SERVICE_ROLE`.
+
+Regressões permanentes: padrões adversariais 33–38. Benchmark de 532 casos,
+mutações 130/130, RLS e server actions inalterados; em código real auditado
+(87 sinks), nenhuma decisão mudou.
+
 ## [1.1.1-public] — 2026-10-12
 
 ### Corrigido — falso VULNERABLE (leia se usa 1.0.0 a 1.1.0)

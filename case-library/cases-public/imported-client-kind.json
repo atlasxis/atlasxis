@@ -1,0 +1,42 @@
+{
+  "id": "imported-client-kind",
+  "title": "Client Supabase importado de outro arquivo é classificado pela definição exportada (1.2.0)",
+  "status": "CANDIDATE",
+  "origin": {
+    "project": "validação do Atlasxis como verificador de um orquestrador de missões fora do projeto de origem (fixture sintética no layout padrão Next.js + Supabase)",
+    "location": "core/extract.mjs (sinkClientKind → importedClientKind)",
+    "date": "2026-10-13"
+  },
+  "mechanism": "o client usado no sink vem de um import (`import { adminDb } from \"@/lib/db\"`) ou de uma fábrica importada (`await createClient()`); a 1.1.1 classificava só por nome na própria rota e abstinha",
+  "oracle_result": {
+    "status": "VULNERABLE",
+    "reasonCode": "VULNERABLE_NO_GATING_SERVICE_ROLE"
+  },
+  "ground_truth": {
+    "decision": "definição exportada com chave service_role e sink por id do cliente sem gating → VULNERABLE; com filtro de dono → CONTROLLED; módulo com os dois clients e rota usando o do usuário, import ambíguo ou definição mista → abster",
+    "source": "construction",
+    "justification": "a definição exportada é código do próprio projeto lido no mesmo conjunto de arquivos; quando ela é inequívoca, o tipo do client é tão estrutural quanto um client criado na própria rota."
+  },
+  "evidence": "Padrões adversariais 33-38: 33 e 38 VULNERABLE, 34 CONTROLLED, 35-37 abstêm. Benchmark 532/532, mutações 130/130; no código real auditado (87 sinks) 0 decisões mudaram; no app de notas sintético a IDOR passou de INSUFFICIENT_RLS_UNKNOWN para VULNERABLE.",
+  "code_ref": "core/extract.mjs",
+  "fixtures": {
+    "positive": ["core/harness/adversarial-repo.mjs"],
+    "negative": ["core/harness/adversarial-repo.mjs"],
+    "adversarial": ["core/harness/adversarial-repo.mjs"]
+  },
+  "regression": "core/harness/adversarial-repo.mjs (padrões 33-38)",
+  "certification": {
+    "real_case": false,
+    "ground_truth": true,
+    "fixture_positive": true,
+    "fixture_negative": true,
+    "fixture_adversarial": true,
+    "regression_pass": true,
+    "mutation_pass": true,
+    "benchmark_pass": true,
+    "external_pass": true,
+    "no_false_control_increase": true
+  },
+  "human_validation": "Variantes construídas e revisadas pelo mantenedor; auditoria cega independente PENDING.",
+  "notes": "CANDIDATE: o layout é o padrão gerado pelo Supabase para Next.js, mas ainda não observado num repositório real de terceiros. Re-export (`export { x } from`) não é seguido (fail-closed)."
+}
