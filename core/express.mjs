@@ -1054,6 +1054,11 @@ function decide(flow, sink, ctx, route) {
   // the ownership binding
   const opaque = (sink.where || []).find((w) => w.label?.k === "spread" || /(^|\.)(AND|OR|NOT)(\.|$)/.test(w.field) || (w.label?.k !== "client" && route.principalModels.some((pm) => ownershipField(ctx.schema, sink.model, w.field, pm))));
   if (opaque) return D(STATUS.INSUFFICIENT, REASON.INSUFFICIENT_UNRESOLVED_GATING, null, baseAsm, [`filtro ${opaque.field} em forma não provada — pode ser a ligação de dono`]);
+  // for a read, any other key in the filter (published: true, status: "PUBLIC"…) can be what makes it
+  // legitimate for anyone — absence of an ownership check is not proven (same rule as the Supabase
+  // engine's unmodeled filters). A write to someone else's record is not made legitimate by a filter.
+  const extraKey = sink.kind === "read" ? (sink.where || []).find((w) => w.label?.k !== "client" && w.label?.k !== "identity") : undefined;
+  if (extraKey) return D(STATUS.INSUFFICIENT, REASON.INSUFFICIENT_UNRESOLVED_GATING, null, baseAsm, [`filtro ${extraKey.field} além do id do cliente — leitura pode ser legítima para qualquer um`]);
   const unresolved = before.find((u) => u.type === "unresolved");
   if (unresolved) return D(STATUS.INSUFFICIENT, REASON.INSUFFICIENT_GUARD_UNRESOLVED, null, baseAsm, [`chamada não resolvida antes do acesso: ${unresolved.why}`]);
   const owned = ownedByPrincipal(ctx.schema, sink.model, route.principalModels);

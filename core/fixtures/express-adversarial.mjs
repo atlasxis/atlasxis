@@ -152,6 +152,10 @@ export const EXPRESS_ADVERSARIAL_CASES = [
     ];
   })(),
 
+  // ---- quarta rodada (revisão adversarial do ORÁCULO, 14/out/2026): leitura pública por desenho ----
+  { id: "D01-read-filtered-published", schemas: S, files: app(H("get", `res.json(await prisma.note.findFirst({ where: { id: req.params.id, published: true } }));`)), mustNotStatus: { "GET /n/:id note.findFirst": ["VULNERABLE"] } },
+  { id: "D02-write-with-extra-filter-still-vulnerable", schemas: S, files: app(H("delete", `res.json(await prisma.note.deleteMany({ where: { id: req.params.id, archived: false } }));`)), expect: { "DELETE /n/:id note.deleteMany": "VULNERABLE_NO_OWNERSHIP_CHECK" } },
+
   // ---- queda ----
   { id: "A37-namespace-member-external", schemas: S, files: { ...app(`app.get("/n/:id", auth, ctrl.getNote);`, `import * as ctrl from "./ctrl";`), "src/ctrl.ts": `import { getNote } from "some-pkg";\n` }, noCrash: true },
 ];

@@ -95,6 +95,22 @@ add("37 definição que mistura admin e usuário", "MUST_ABSTAIN", IMP(`import {
 add("38 createClient importado que usa service role", "PROVE_VULNERABLE", IMP(`import { createClient } from "./lib/server"; export async function DELETE(request,{params}){ const {id}=await params; const supabase = await createClient(); await supabase.from("notes").delete().eq("id",id); return Response.json({ok:true}); }`, { "lib/server.ts": `export async function createClient() { return makeClient(process.env.SUPABASE_SERVICE_ROLE_KEY); }\nfunction makeClient(key) { return createBrowserLike(process.env.URL, key); }` }));
 
 let fail = 0, falseControl = 0, falseVuln = 0, integrity = 0;
+// 39-45. vínculo ao chamador em forma não modelada (revisão adversarial do ORÁCULO, 13/out/2026): o id do
+// cliente estreita um conjunto já preso ao usuário. Falso VULNERABLE até a 1.3.0.
+const idq = `const {conversationId}=await params; ${admin} const {data}=await supabaseAdmin.from("messages").select("id").eq("conversation_id",conversationId)`;
+add("39 .filter(col,'eq',user.id)", "MUST_ABSTAIN", H("GET", `${idq}.filter("participant_id","eq",user.id); return Response.json({data});`));
+add("40 .or(...user.id...)", "MUST_ABSTAIN", H("GET", `${idq}.or(\`sender_id.eq.\${user.id},recipient_id.eq.\${user.id}\`); return Response.json({data});`));
+add("41 apelido do user.id (me)", "MUST_ABSTAIN", H("GET", `const me=user.id; ${idq}.eq("participant_id",me); return Response.json({data});`));
+add("42 apelido do user.id (userId) em coluna de dono", "PROVE_CONTROLLED", H("GET", `const userId=user.id; ${idq}.eq("user_id",userId); return Response.json({data});`));
+add("43 .in() sobre lista do usuário", "MUST_ABSTAIN", H("GET", `const {conversationId}=await params; ${admin} const {data:mine}=await supabaseAdmin.from("members").select("conversation_id").eq("user_id",user.id); const allowed=(mine??[]).map((r)=>r.conversation_id); const {data}=await supabaseAdmin.from("messages").select("id").eq("conversation_id",conversationId).in("conversation_id",allowed); return Response.json({data});`));
+add("44 junção !inner com dono", "MUST_ABSTAIN", H("GET", `const {conversationId}=await params; ${admin} const {data}=await supabaseAdmin.from("messages").select("id, conversations!inner(owner_id)").eq("conversation_id",conversationId).eq("conversations.owner_id",user.id); return Response.json({data});`));
+add("45 IDOR evidente segue provado", "PROVE_VULNERABLE", H("GET", `${idq}; return Response.json({data});`));
+
+// 46-48. gate por consulta prévia presa à identidade e ao id do cliente (revisão adversarial do ORÁCULO).
+add("46 lê a própria linha antes e devolve 404", "MUST_ABSTAIN", H("GET", `${idq.replace('.eq("conversation_id",conversationId)', "")}; const {data:conv}=await supabaseAdmin.from("conversations").select("id").eq("id",conversationId).eq("owner_id",user.id).maybeSingle(); if(!conv) return new Response(null,{status:404}); const {data:msgs}=await supabaseAdmin.from("messages").select("id").eq("conversation_id",conversationId); return Response.json({msgs});`));
+add("47 rpc de participação antes do acesso", "MUST_ABSTAIN", H("GET", `const {conversationId}=await params; ${admin} const {data:isMember}=await supabaseAdmin.rpc("is_member",{cid:conversationId,uid:user.id}); if(!isMember) return new Response(null,{status:404}); const {data}=await supabaseAdmin.from("messages").select("id").eq("conversation_id",conversationId); return Response.json({data});`));
+add("48 só busca o perfil do chamador e lê recurso alheio", "PROVE_VULNERABLE", H("GET", `const {conversationId}=await params; ${admin} const {data:profile}=await supabaseAdmin.from("profiles").select("id").eq("id",user.id).maybeSingle(); if(!profile) return new Response(null,{status:401}); const {data}=await supabaseAdmin.from("messages").select("id").eq("conversation_id",conversationId); return Response.json({data});`));
+
 console.log(`=== REPOSITÓRIO ADVERSARIAL (${CASES.length} padrões) ===`);
 for (const c of CASES) {
   const rls = c.sql ? { model: parseSqlCorpus(c.sql), declared: {}, options: {} } : {};

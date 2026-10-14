@@ -3,6 +3,28 @@
 Formato: [Keep a Changelog](https://keepachangelog.com/). Versões seguem a tag
 técnica do engine.
 
+## [1.3.1-public] — 2026-10-14
+
+### Corrigido (falso VULNERABLE)
+- **Vínculo ao chamador em forma não modelada.** Uma consulta com `supabaseAdmin` filtrada pelo id do
+  cliente e também presa ao usuário por `.filter("col","eq",user.id)`, `.or(\`a.eq.${user.id},…\`)`,
+  `.in(col, listaDoUsuário)` ou outro filtro que o motor não modela saía `VULNERABLE_NO_GATING_SERVICE_ROLE`.
+  Agora qualquer filtro não modelado na cadeia do acesso (ou junção `!inner`) impede provar a ausência
+  de vínculo: `INSUFFICIENT_UNRESOLVED_GATING`.
+- **Apelido do id do usuário.** `const me = user.id; … .eq("participant_id", me)` não era reconhecido
+  como filtro pela identidade; agora conta como `user.id` (coluna de dono → `CONTROLLED_SELF_SCOPE`,
+  outra coluna → abstenção).
+- **Gate por consulta prévia.** Uma rota que primeiro lê a própria linha do chamador pelo id do cliente
+  (`.eq("id", cid).eq("owner_id", user.id)`) ou chama uma `rpc` com o id do cliente e `user.id`, e sai
+  antes (404/throw) quando não há resultado, saía `VULNERABLE`. Agora abstém
+  (`INSUFFICIENT_UNRESOLVED_GATING`). Buscar só o perfil do chamador continua não sendo gate.
+- Repositório adversarial: casos 39–48 (o IDOR evidente e o "perfil + recurso alheio" seguem `VULNERABLE`).
+- **Express: leitura pública por desenho.** `findFirst({ where: { id: req.params.id, published: true } })`
+  saía `VULNERABLE_NO_OWNERSHIP_CHECK`. Numa leitura, uma chave além do id do cliente que não é a
+  identidade agora abstém (`INSUFFICIENT_UNRESOLVED_GATING`); numa escrita, segue `VULNERABLE`.
+  Certificação Express: 98 casos (D01/D02).
+  Encontrado pela revisão adversarial do ORÁCULO.
+
 ## [1.3.0-public] — 2026-10-13
 
 ### Adicionado (experimental)

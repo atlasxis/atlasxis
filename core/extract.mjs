@@ -349,7 +349,11 @@ export function queryInfo(node, sf) {
       });
     });
   }
-  return { table, filters, op, fields, selectCols, writeSpreads };
+  // Filters the engine does not model (.filter/.or/.in/.not/.contains/…, an !inner join): they can bind the
+  // rows to the caller, so their presence forbids proving that nothing does.
+  const unmodeledFilters = findAll(node, (n) => ts.isCallExpression(n) && ts.isPropertyAccessExpression(n.expression) && /^(filter|or|in|not|contains|containedBy|overlaps|textSearch|rangeGt|rangeLt|is|like|ilike)$/.test(n.expression.name.text)).map((n) => n.expression.name.text);
+  if (selectCols?.some((col) => col.includes("!inner")) || (selCall && /!inner/.test(selCall.arguments[0].text))) unmodeledFilters.push("!inner");
+  return { table, filters, op, fields, selectCols, writeSpreads, unmodeledFilters };
 }
 
 export function findAllSinks(fn, sf) {
@@ -358,7 +362,7 @@ export function findAllSinks(fn, sf) {
     const q = queryInfo(node, sf);
     if (q && q.table) {
       const key = q.table + ":" + q.op + ":" + node.pos;
-      if (!seen.has(key)) { seen.add(key); sinks.push({ ...Sink({ ...q, pos: node.pos, returned }), node, spreads: q.writeSpreads || [] }); }
+      if (!seen.has(key)) { seen.add(key); sinks.push({ ...Sink({ ...q, pos: node.pos, returned }), node, spreads: q.writeSpreads || [], unmodeledFilters: q.unmodeledFilters || [] }); }
     }
   };
   // reads expostos via return — M1: exclui chaves de PropertyAssignment e nomes de membro

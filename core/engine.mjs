@@ -340,7 +340,10 @@ export function analyzeHandlerIR(fn, sf, code, path, files, rls, opts = {}) {
       // prova do self-scope; outra coluna → abster. Insert/upsert não filtram
       // linhas: gravar com dono = user.id num recurso alheio segue sem prova.
       if (!/insert|upsert/.test(sink.op)) {
-        const bound = (sink.filters || []).filter((f) => /\buser\.id\b/.test(f.val));
+        // The caller's id may be held in another name (`const me = user.id`): those names bind too.
+        const aliases = [...sf.getFullText().matchAll(/(?:const|let|var)\s+(\w+)\s*=\s*(?:await\s+)?(?:\w+\??\.)*user\??\.id\b/g)].map((m) => m[1]);
+        const identity = new RegExp(`\\buser\\.id\\b${aliases.map((a) => `|^${a}$`).join("")}`);
+        const bound = (sink.filters || []).filter((f) => identity.test(f.val));
         if (bound.some((f) => OWNER.has(f.col))) return selfScope(sink, sinkInfo, D);
         if (bound.length)
           return D(STATUS.INSUFFICIENT, REASON.INSUFFICIENT_UNRESOLVED_GATING, null, [], [
@@ -353,6 +356,28 @@ export function analyzeHandlerIR(fn, sf, code, path, files, rls, opts = {}) {
           `gating vivo não resolvido (user.id-cmp:${liveCmp}, status-público:${pubFilter}, role:${roleChk}) — caminho desprotegido não provado`,
         ]);
       }
+      // A query or rpc that binds the client's id to the caller's identity before the sink, followed by an
+      // early exit, can be the gate (the most common correct route reads the caller's own row first and
+      // returns 404). A lookup of the caller alone (their profile) is not a gate on the resource.
+      {
+        const handlerText = fn.getText(sf);
+        const sinkAt = sink.pos - fn.getStart(sf);
+        const before = sinkAt > 0 ? handlerText.slice(0, sinkAt) : handlerText;
+        const aliasNames = [...sf.getFullText().matchAll(/(?:const|let|var)\s+(\w+)\s*=\s*(?:await\s+)?(?:\w+\??\.)*user\??\.id\b/g)].map((m) => m[1]);
+        const identityRe = new RegExp(`\\buser\\??\\.id\\b${aliasNames.map((a) => `|\\b${a}\\b`).join("")}`);
+        const statements = before.split(/;\s*\n|;\s*(?=\S)/);
+        const boundEarlier = statements.some((st) => /\.(rpc|from)\s*\(/.test(st) && identityRe.test(st) && rids.some((rid) => new RegExp(`[(,:{]\\s*${String(rid).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*[),}]`).test(st)));
+        const earlyExit = /\bif\s*\([^)]*\)\s*\{?\s*(return|throw)\b/.test(before);
+        if (boundEarlier && earlyExit)
+          return D(STATUS.INSUFFICIENT, REASON.INSUFFICIENT_UNRESOLVED_GATING, null, [], [
+            "consulta ou rpc presa à identidade antes do acesso, seguida de saída antecipada — possível gate não descartado",
+          ]);
+      }
+      // A filter the engine does not model can be the owner binding: absence of gating is not proven.
+      if (!/insert|upsert/.test(sink.op) && (sink.unmodeledFilters || []).length)
+        return D(STATUS.INSUFFICIENT, REASON.INSUFFICIENT_UNRESOLVED_GATING, null, [], [
+          `sink usa filtros não modelados (${[...new Set(sink.unmodeledFilters)].join(", ")}) — vínculo ao usuário não descartado`,
+        ]);
       if (client === "service_role") {
         const proof = ProofChain({
           mechanism: "absence-of-gating",
